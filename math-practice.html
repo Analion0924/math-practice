@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数的分解练习</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:linear-gradient(135deg,#a8e6cf,#dcedc1,#ffd3b6);min-height:100vh;color:#2c3e50;overflow-x:hidden}
+.container{max-width:800px;margin:0 auto;padding:20px;position:relative}
+.deco{position:fixed;font-size:2em;opacity:.12;pointer-events:none;z-index:0}
+.deco:nth-child(1){top:5%;left:5%;animation:float 6s ease-in-out infinite}
+.deco:nth-child(2){top:15%;right:8%;animation:float 7s ease-in-out infinite .5s}
+.deco:nth-child(3){bottom:20%;left:10%;animation:float 5s ease-in-out infinite 1s}
+.deco:nth-child(4){bottom:10%;right:5%;animation:float 8s ease-in-out infinite 1.5s}
+@keyframes float{0%,100%{transform:translateY(0)rotate(0)}50%{transform:translateY(-15px)rotate(5deg)}}
+#home-screen{text-align:center;position:relative;z-index:1}
+.page-title{font-size:2.2em;color:#e74c3c;margin:20px 0 8px;text-shadow:2px 2px 0 rgba(231,76,60,.15);animation:titleBounce 2s ease-in-out infinite}
+@keyframes titleBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.page-sub{font-size:1.1em;color:#555;margin-bottom:25px}
+.number-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:500px;margin:0 auto 30px}
+.number-card{background:white;border-radius:20px;padding:30px 10px;cursor:pointer;transition:all .25s;box-shadow:0 6px 20px rgba(0,0,0,.1);position:relative;overflow:hidden}
+.number-card:hover{transform:translateY(-6px)scale(1.05);box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.number-card .big-num{font-size:3em;font-weight:bold;display:block;margin-bottom:6px}
+.number-card .card-label{font-size:.9em;color:#7f8c8d}
+.nc-10 .big-num{color:#e74c3c}.nc-9 .big-num{color:#e67e22}.nc-8 .big-num{color:#f1c40f}.nc-7 .big-num{color:#2ecc71}.nc-6 .big-num{color:#3498db}.nc-5 .big-num{color:#9b59b6}
+.number-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:5px}
+.nc-10::after{background:#e74c3c}.nc-9::after{background:#e67e22}.nc-8::after{background:#f1c40f}.nc-7::after{background:#2ecc71}.nc-6::after{background:#3498db}.nc-5::after{background:#9b59b6}
+#review-screen{display:none;position:relative;z-index:1}
+.review-header{text-align:center;margin-bottom:10px}.review-header h2{font-size:1.8em;color:#e74c3c}
+.review-header .back-btn{display:inline-block;margin-top:10px;background:#bdc3c7;color:white;border:none;padding:8px 24px;border-radius:20px;cursor:pointer;font-size:.9em;transition:.2s}
+.review-header .back-btn:hover{background:#95a5a6}
+.review-prompt{text-align:center;font-size:1.25em;color:#2c3e50;margin-bottom:16px;font-weight:bold;background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.decompose-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:30px}
+.decompose-item{background:white;border-radius:16px;padding:20px;text-align:center;font-size:1.4em;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,.08);transition:all .3s;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap}
+.decompose-item .eq{color:#2c3e50}
+.decompose-item .num-a{color:#e74c3c;font-size:1em;vertical-align:middle}
+.hidden-part{display:inline-block;min-width:8em;height:1.2em;background:#2980b9;border-radius:8px;font-weight:bold;transition:all .4s;user-select:none;vertical-align:middle;margin-left:2px;cursor:pointer;overflow:hidden;white-space:nowrap;color:transparent}
+.hidden-part.show{min-width:0;width:auto;height:auto;color:#2980b9 !important;background:transparent !important}
+.decompose-item .plus{color:#f39c12}.decompose-item .equals{color:#7f8c8d}.decompose-item:hover{transform:scale(1.05)}
+.start-practice-btn{display:block;margin:10px auto 0;background:linear-gradient(135deg,#2ecc71,#27ae60);color:white;border:none;padding:14px 50px;font-size:1.1em;border-radius:50px;cursor:pointer;transition:.3s;box-shadow:0 4px 15px rgba(46,204,113,.4)}
+.start-practice-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(46,204,113,.5)}
+#practice-screen{display:none;position:relative;z-index:1}
+.practice-header{display:flex;justify-content:space-between;align-items:center;background:white;padding:14px 22px;border-radius:16px;margin-bottom:20px;box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.practice-header h2{font-size:1.2em;color:#e74c3c}.practice-header .back-btn{background:#bdc3c7;color:white;border:none;padding:7px 18px;border-radius:16px;cursor:pointer;font-size:.85em;transition:.2s}
+.practice-header .back-btn:hover{background:#95a5a6}
+.stats{display:flex;gap:18px;font-size:.9em;color:#555}.stats b{color:#2980b9}
+.question-area{background:white;border-radius:20px;padding:40px 20px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.08);margin-bottom:20px}
+.q-num{font-size:1em;color:#bdc3c7;margin-bottom:10px}.q-text{font-size:2.8em;font-weight:bold;color:#2c3e50;margin-bottom:25px;letter-spacing:2px}
+.answer-buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:20px}
+.ans-btn{width:70px;height:70px;border-radius:50%;border:3px solid #dcedc1;background:white;font-size:1.5em;font-weight:bold;color:#2c3e50;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.ans-btn:hover{background:#dcedc1;transform:scale(1.1)}.ans-btn.correct-ans{background:#d5f5e3;border-color:#27ae60;color:#27ae60;animation:correctPop .5s}
+.ans-btn.wrong-ans{background:#fadbd8;border-color:#e74c3c;color:#e74c3c;animation:wrongShake .4s}
+@keyframes correctPop{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.feedback-msg{font-size:1.4em;font-weight:bold;height:45px;display:flex;align-items:center;justify-content:center}
+.feedback-msg.correct{color:#27ae60}.feedback-msg.incorrect{color:#e74c3c}
+.next-btn{background:linear-gradient(135deg,#3498db,#2980b9);color:white;border:none;padding:12px 40px;font-size:1em;border-radius:50px;cursor:pointer;transition:.3s;margin-top:10px;display:none}
+.next-btn:hover{transform:translateY(-2px)}
+#result-screen{display:none;position:relative;z-index:1;text-align:center}
+.result-card{background:white;border-radius:20px;padding:35px;box-shadow:0 4px 20px rgba(0,0,0,.1);max-width:500px;margin:0 auto}
+.result-card h2{font-size:1.6em;color:#e74c3c;margin-bottom:20px}.result-emoji{font-size:4em;margin-bottom:15px}
+.result-stats{text-align:left;margin:20px 0}.result-stat{display:flex;justify-content:space-between;padding:10px 16px;background:#f8f9fa;border-radius:10px;margin-bottom:8px;font-size:1em}
+.result-stat .label{color:#555}.result-stat .value{font-weight:bold;color:#2c3e50}.stars{font-size:2em;margin:15px 0}
+.btn-home{background:linear-gradient(135deg,#e74c3c,#c0392b);color:white;border:none;padding:12px 40px;font-size:1em;border-radius:50px;cursor:pointer;margin:8px;transition:.3s}
+.btn-home:hover{transform:translateY(-2px)}.btn-retry{background:linear-gradient(135deg,#2ecc71,#27ae60);color:white;border:none;padding:12px 40px;font-size:1em;border-radius:50px;cursor:pointer;margin:8px;transition:.3s}
+.btn-retry:hover{transform:translateY(-2px)}.firework{position:fixed;pointer-events:none;z-index:999;font-size:1.5em;animation:fireworkUp 1s ease-out forwards}
+@keyframes fireworkUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-120px) scale(1.5)}}
+@media(max-width:600px){.number-cards{grid-template-columns:repeat(2,1fr);gap:12px}.number-card .big-num{font-size:2.2em}.q-text{font-size:2.2em !important}.ans-btn{width:56px;height:56px;font-size:1.2em}}
+</style>
+</head>
+<body>
+<div class="deco">✏️</div>
+<div class="deco">📐</div>
+<div class="deco">🔢</div>
+<div class="deco">⭐</div>
+<div class="container">
+<div id="home-screen">
+  <h1 class="page-title">数的分解练习</h1>
+  <p class="page-sub">选择一个数字，开始学习吧！🎉</p>
+  <div class="number-cards">
+    <div class="number-card nc-10" onclick="enterReview(10)"><span class="big-num">10</span><span class="card-label">10的分解</span></div>
+    <div class="number-card nc-9"  onclick="enterReview(9)"><span class="big-num">9</span><span class="card-label">9的分解</span></div>
+    <div class="number-card nc-8"  onclick="enterReview(8)"><span class="big-num">8</span><span class="card-label">8的分解</span></div>
+    <div class="number-card nc-7"  onclick="enterReview(7)"><span class="big-num">7</span><span class="card-label">7的分解</span></div>
+    <div class="number-card nc-6"  onclick="enterReview(6)"><span class="big-num">6</span><span class="card-label">6的分解</span></div>
+    <div class="number-card nc-5"  onclick="enterReview(5)"><span class="big-num">5</span><span class="card-label">5的分解</span></div>
+  </div>
+  <p style="color:#95a5a6;font-size:.88em">适合小学低年级｜点击数字卡片开始学习</p>
+</div>
+<div id="review-screen">
+  <div class="review-header">
+    <h2 id="review-title">10 的分解</h2>
+    <button class="back-btn" onclick="goHome()">← 返回首页</button>
+  </div>
+  <div class="review-prompt" id="review-prompt"></div>
+  <p style="text-align:center;color:#7f8c8d;margin-bottom:14px;font-size:.92em">第一个数已显示，点击卡片翻看后面的部分 ✨</p>
+  <div class="decompose-grid" id="decompose-grid"></div>
+  <div style="text-align:center">
+    <button class="start-practice-btn" onclick="startPractice()">开始练习 ✏️</button>
+  </div>
+</div>
+<div id="practice-screen">
+  <div class="practice-header">
+    <h2 id="practice-title">10的分解 - 练习</h2>
+    <button class="back-btn" onclick="goHome()">← 返回</button>
+    <div class="stats">
+      <div>第 <b id="q-index">1</b> 题</div>
+      <div>正确：<b id="p-correct">0</b></div>
+      <div>错误：<b id="p-errors">0</b></div>
+    </div>
+  </div>
+  <div class="question-area">
+    <div class="q-num" id="q-num-label">第 1 题 / 共 10 题</div>
+    <div class="q-text" id="q-text"></div>
+    <div class="answer-buttons" id="answer-buttons"></div>
+    <div class="feedback-msg" id="feedback-msg"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一题 →</button>
+  </div>
+</div>
+<div id="result-screen">
+  <div class="result-card">
+    <div class="result-emoji" id="result-emoji">🎉</div>
+    <h2>练习完成！</h2>
+    <div class="stars" id="result-stars"></div>
+    <div class="result-stats">
+      <div class="result-stat"><span class="label">总题数</span><span class="value" id="rs-total">0</span></div>
+      <div class="result-stat"><span class="label">正确题数</span><span class="value" id="rs-correct">0</span></div>
+      <div class="result-stat"><span class="label">正确率</span><span class="value" id="rs-accuracy">0%</span></div>
+      <div class="result-stat"><span class="label">用时</span><span class="value" id="rs-time">0秒</span></div>
+    </div>
+    <div id="result-comment" style="margin:18px 0;font-size:1em;color:#555;line-height:1.6"></div>
+    <button class="btn-retry" onclick="retrySame()">再练一次 🔄</button>
+    <button class="btn-home" onclick="goHome()">返回首页 🏠</button>
+  </div>
+</div>
+</div>
+<script>
+var currentNum=10,pairs=[],questions=[],qIdx=0,pCorrect=0,pErrors=0,startTime=0,accepting=true;
+function getPairs(n){var p=[];for(var i=1;i<=n-1;i++){p.push([i,n-i]);}return p;}
+function enterReview(n){currentNum=n;pairs=getPairs(n);document.getElementById("home-screen").style.display="none";document.getElementById("review-screen").style.display="block";document.getElementById("result-screen").style.display="none";document.getElementById("practice-screen").style.display="none";document.getElementById("review-title").textContent=n+" 的分解";document.getElementById("review-prompt").textContent=n+" 可以分成几和几？";renderDecomposeGrid();}
+function renderDecomposeGrid(){var grid=document.getElementById("decompose-grid");grid.innerHTML="";for(var i=0;i<pairs.length;i++){var p=pairs[i];var item=document.createElement("div");item.className="decompose-item";item.innerHTML='<span class="num-a">'+p[0]+'</span>'+'<span class="hidden-part" id="hp-'+i+'" data-full=" + '+p[1]+' = '+currentNum+'" onclick="revealItem('+i+')"></span>';grid.appendChild(item);}}
+function revealItem(idx){var item=document.querySelectorAll(".decompose-item")[idx];if(!item)return;item.classList.add("revealed");var hidden=document.getElementById("hp-"+idx);if(hidden){hidden.textContent=hidden.dataset.full;hidden.classList.add("show");}launchFirework(item);}
+function startPractice(){questions=generateQuestions(currentNum);qIdx=0;pCorrect=0;pErrors=0;accepting=true;startTime=Date.now();document.getElementById("review-screen").style.display="none";document.getElementById("practice-screen").style.display="block";document.getElementById("practice-title").textContent=currentNum+" 的分解 - 练习";document.getElementById("p-correct").textContent="0";document.getElementById("p-errors").textContent="0";showQuestion();}
+function generateQuestions(n){var qs=[];for(var i=0;i<10;i++){var a=Math.floor(Math.random()*(n-1))+1;var isSub=Math.random()>0.5;if(isSub){qs.push({parts:[String(n)," - ",String(a)," = ","?"],answer:n-a});}else{qs.push({parts:[String(a)," + ","?"," = ",String(n)],answer:n-a});}}return qs;}
+function showQuestion(){if(qIdx>=questions.length){finishPractice();return;}accepting=true;var q=questions[qIdx];document.getElementById("q-index").textContent=qIdx+1;document.getElementById("q-num-label").textContent="第 "+(qIdx+1)+" 题 / 共 "+questions.length+" 题";var container=document.getElementById("q-text");container.innerHTML="";var parts=q.parts;for(var j=0;j<parts.length;j++){var tok=parts[j];var span=document.createElement("span");if(tok==="?"){span.style.color="#e74c3c";span.style.fontSize="1.15em";span.style.fontWeight="bold";span.textContent=tok;}else if(tok.indexOf("-")>=0){span.style.color="#e74c3c";span.style.margin="0 4px";span.style.fontSize="1.05em";span.textContent="-";}else if(tok.indexOf("+")>=0){span.style.color="#f39c12";span.style.margin="0 4px";span.style.fontSize="1.05em";span.textContent="+";}else if(tok.indexOf("=")>=0){span.style.color="#7f8c8d";span.style.margin="0 4px";span.textContent="=";}else{span.textContent=tok;}container.appendChild(span);}document.getElementById("feedback-msg").textContent="";document.getElementById("feedback-msg").className="feedback-msg";document.getElementById("next-btn").style.display="none";renderAnswerButtons(q);}
+function renderAnswerButtons(q){var container=document.getElementById("answer-buttons");container.innerHTML="";var correct=q.answer;var distractors=[];while(distractors.length<3){var d=Math.floor(Math.random()*(currentNum+1));if(d!==correct&&distractors.indexOf(d)===-1)distractors.push(d);}var allAnswers=[correct];for(var i=0;i<distractors.length;i++)allAnswers.push(distractors[i]);for(var i=allAnswers.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=allAnswers[i];allAnswers[i]=allAnswers[j];allAnswers[j]=tmp;}for(var i=0;i<allAnswers.length;i++){var ans=allAnswers[i];var btn=document.createElement("button");btn.className="ans-btn";btn.textContent=ans;btn.dataset.ans=ans;btn.dataset.correct=correct;btn.onclick=function(){selectAnswer(this,parseInt(this.dataset.ans),parseInt(this.dataset.correct));};container.appendChild(btn);}}
+function selectAnswer(btnEl,selected,correct){if(!accepting)return;accepting=false;var allBtns=document.querySelectorAll(".ans-btn");for(var i=0;i<allBtns.length;i++)allBtns[i].style.pointerEvents="none";if(selected===correct){btnEl.classList.add("correct-ans");pCorrect++;document.getElementById("p-correct").textContent=pCorrect;document.getElementById("feedback-msg").textContent=getCorrectPhrase();document.getElementById("feedback-msg").className="feedback-msg correct";launchFirework(btnEl);}else{btnEl.classList.add("wrong-ans");pErrors++;document.getElementById("p-errors").textContent=pErrors;document.getElementById("feedback-msg").textContent="再想想～正确答案是 "+correct;document.getElementById("feedback-msg").className="feedback-msg incorrect";for(var i=0;i<allBtns.length;i++){if(parseInt(allBtns[i].textContent)===correct)allBtns[i].classList.add("correct-ans");}}document.getElementById("next-btn").style.display="inline-block";}
+function getCorrectPhrase(){var phrases=["太棒了！","正确！","你真聪明！","厉害！","对了！","好样的！"];return phrases[Math.floor(Math.random()*phrases.length)];}
+function nextQuestion(){qIdx++;showQuestion();}
+function finishPractice(){var elapsed=Math.round((Date.now()-startTime)/1000);var total=questions.length;var acc=total>0?Math.round((pCorrect/total)*100):0;document.getElementById("practice-screen").style.display="none";document.getElementById("result-screen").style.display="block";window.scrollTo(0,0);var emoji="",stars="",comment="";if(acc>=90){emoji="🎉";stars="⭐⭐⭐⭐⭐";comment="太厉害了！你是数学小天才！";}else if(acc>=70){emoji="😄";stars="⭐⭐⭐⭐";comment="很不错！再多练习几次，你会更棒的！";}else if(acc>=50){emoji="😊";stars="⭐⭐⭐";comment="还不错，继续加油！多练习就能进步很快！";}else{emoji="💪";stars="⭐⭐";comment="没关系，多练习几次就会了！相信自己！";}document.getElementById("result-emoji").textContent=emoji;document.getElementById("result-stars").textContent=stars;document.getElementById("rs-total").textContent=total;document.getElementById("rs-correct").textContent=pCorrect;document.getElementById("rs-accuracy").textContent=acc+"%";document.getElementById("rs-time").textContent=elapsed+"秒";document.getElementById("result-comment").textContent=comment;for(var i=0;i<15;i++)setTimeout(function(){launchFireworkRandom();},i*100);}
+function launchFirework(refEl){try{var rect=refEl.getBoundingClientRect();var emojis=["✨","🌟","⭐","💫","🎉"];for(var i=0;i<5;i++){var fw=document.createElement("div");fw.className="firework";fw.textContent=emojis[Math.floor(Math.random()*emojis.length)];fw.style.left=(rect.left+Math.random()*rect.width)+"px";fw.style.top=(rect.top+Math.random()*rect.height)+"px";document.body.appendChild(fw);(function(el){setTimeout(function(){if(el)el.remove();},1000);})(fw);}}catch(e){}}
+function launchFireworkRandom(){try{var emojis=["✨","🌟","⭐","💫","🎈","🎊"];var fw=document.createElement("div");fw.className="firework";fw.textContent=emojis[Math.floor(Math.random()*emojis.length)];fw.style.left=Math.random()*window.innerWidth+"px";fw.style.top=Math.random()*window.innerHeight*0.6+"px";document.body.appendChild(fw);setTimeout(function(){fw.remove();},1000);}catch(e){}}
+function goHome(){document.getElementById("home-screen").style.display="block";document.getElementById("review-screen").style.display="none";document.getElementById("practice-screen").style.display="none";document.getElementById("result-screen").style.display="none";}
+function retrySame(){enterReview(currentNum);}
+</script>
+</body>
+</html>
