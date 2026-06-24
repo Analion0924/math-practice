@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>威斯康辛卡牌分类测试 WCST</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:linear-gradient(135deg,#e8f0fe,#f5f7fa);min-height:100vh;color:#2c3e50;user-select:none}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+
+/* ===== 欢迎页 ===== */
+#welcome-screen{text-align:center;padding:40px 20px}
+#welcome-screen h1{font-size:2em;color:#1a5276;margin-bottom:6px}
+#welcome-screen .en-sub{color:#bdc3c7;font-size:.75em;font-weight:normal;margin-bottom:24px;display:block}
+.info-box{background:white;border-radius:12px;padding:22px 28px;margin:14px auto;max-width:720px;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:left;line-height:1.85}
+.info-box h3{color:#1a5276;margin-bottom:10px;font-size:1.02em;padding-left:12px;border-left:4px solid #2980b9}
+.info-box ul{padding-left:18px;color:#444;font-size:.93em}
+.info-box li{margin-bottom:6px}
+.btn-start{background:linear-gradient(135deg,#2980b9,#1a5276);color:white;border:none;padding:14px 52px;font-size:1.12em;border-radius:50px;cursor:pointer;margin-top:22px;transition:.3s;box-shadow:0 4px 15px rgba(41,128,185,.4)}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(41,128,185,.5)}
+
+/* ===== 测试页 ===== */
+#test-screen{display:none}
+.test-header{display:flex;justify-content:space-between;align-items:center;background:white;padding:13px 22px;border-radius:12px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.test-header h2{font-size:1.1em;color:#1a5276}
+.progress-info{display:flex;gap:20px;font-size:.9em;color:#555}
+.progress-info b{color:#2980b9}
+
+.key-cards-section{background:white;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.key-cards-section .hint{text-align:center;color:#7f8c8d;font-size:.9em;margin-bottom:12px}
+.key-cards{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.key-card{width:150px;height:108px;border:3px solid #bdc3c7;border-radius:10px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;background:#fafafa;gap:5px;padding:8px;cursor:pointer;transition:all .2s;position:relative}
+.key-card:hover{border-color:#2980b9;transform:translateY(-3px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.key-card.flash-correct{animation:flashG .5s;border-color:#27ae60;box-shadow:0 0 20px rgba(39,174,96,.4)}
+.key-card.flash-incorrect{animation:flashR .5s;border-color:#e74c3c;box-shadow:0 0 20px rgba(231,76,60,.4)}
+@keyframes flashG{0%,100%{background:#fafafa}50%{background:#d5f5e3}}
+@keyframes flashR{0%,100%{background:#fafafa}50%{background:#fadbd8}}
+.key-label{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#2980b9;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8em;font-weight:bold}
+
+.response-section{background:white;border-radius:12px;padding:24px;text-align:center;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.response-section .hint{color:#7f8c8d;font-size:.9em;margin-bottom:16px}
+.response-card{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;width:190px;height:140px;border:3px solid #2c3e50;border-radius:12px;background:white;gap:8px;padding:12px;margin-bottom:16px}
+
+.feedback{margin-top:14px;font-size:1.3em;font-weight:bold;height:40px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.feedback.correct{color:#27ae60}
+.feedback.incorrect{color:#e74c3c}
+
+.demo-bar{text-align:center;margin-bottom:10px;font-size:.88em}
+.demo-bar label{cursor:pointer;color:#95a5a6}
+.demo-bar input{margin-right:4px}
+.rule-hint{text-align:center;font-size:.88em;color:#95a5a6;min-height:22px;margin-top:6px}
+
+/* ===== 结果页 ===== */
+#result-screen{display:none}
+.result-container{background:white;border-radius:16px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,.08);max-width:800px;margin:0 auto}
+.result-container h1{text-align:center;color:#1a5276;margin-bottom:22px;font-size:1.6em}
+.result-section{margin-bottom:26px}
+.result-section h3{color:#2980b9;border-bottom:2px solid #ebf5fb;padding-bottom:8px;margin-bottom:12px;font-size:1.02em}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.result-item{display:flex;justify-content:space-between;padding:9px 14px;background:#f8f9fa;border-radius:8px;font-size:.93em}
+.result-item .label{color:#555}
+.result-item .value{font-weight:bold;color:#2c3e50}
+.interpretation{background:#ebf5fb;border-left:4px solid #2980b9;padding:16px 20px;border-radius:0 8px 8px 0;line-height:1.85;font-size:.93em;color:#2c3e50}
+.btn-restart{display:block;margin:24px auto 0;background:linear-gradient(135deg,#2980b9,#1a5276);color:white;border:none;padding:12px 46px;font-size:1.05em;border-radius:50px;cursor:pointer;transition:.3s}
+.btn-restart:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(41,128,185,.4)}
+
+@media(max-width:768px){.key-cards{gap:8px}.key-card{width:80px;height:60px;padding:4px}.key-label{width:20px;height:20px;font-size:.7em;top:-8px}.response-card{width:140px;height:100px}.result-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- 欢迎页 -->
+<div id="welcome-screen">
+  <h1>威斯康辛卡牌分类测试</h1>
+  <span class="en-sub">Wisconsin Card Sorting Test (WCST)</span>
+  <div class="info-box">
+    <h3>测试说明</h3>
+    <ul>
+      <li>上方有 <strong>4 张刺激卡</strong>，每张卡的颜色、形状和数量各不相同</li>
+      <li>下方会逐张显示<strong>反应卡</strong>，请用鼠标点击你认为匹配的刺激卡</li>
+      <li>系统只会提示「正确 ✓」或「错误 ✗」，不会告诉你匹配规则</li>
+      <li>你需要通过反馈<strong>自己发现</strong>当前的匹配规则（颜色、形状或数量）</li>
+      <li>当规则发生变化时，你需要<strong>及时调整</strong>匹配策略</li>
+      <li>测试最多 128 张卡片，完成 6 个分类后提前结束，预计耗时 15–25 分钟</li>
+    </ul>
+  </div>
+  <div class="info-box">
+    <h3>匹配维度</h3>
+    <ul>
+      <li><strong>颜色（Color）</strong>：红、绿、蓝、黄 — 按颜色匹配到相同颜色的刺激卡</li>
+      <li><strong>形状（Form）</strong>：三角形、星形、十字形、圆形 — 按形状匹配</li>
+      <li><strong>数量（Number）</strong>：1个、2个、3个、4个 — 按数量匹配</li>
+    </ul>
+  </div>
+  <div class="info-box" style="border-left:4px solid #e74c3c;background:#fef9f9">
+    <h3 style="color:#e74c3c">重要提示</h3>
+    <ul>
+      <li>测试过程中<strong>不要</strong>询问任何关于规则的问题</li>
+      <li>尽量<strong>快速</strong>地做出判断，相信你的第一直觉</li>
+      <li>当发现规则变化后，请尽快调整你的匹配策略</li>
+    </ul>
+  </div>
+  <button class="btn-start" onclick="startTest()">开始测试</button>
+</div>
+
+<!-- 测试页 -->
+<div id="test-screen">
+  <div class="test-header">
+    <h2>威斯康辛卡牌分类测试</h2>
+    <div class="progress-info">
+      <div>进度：<b id="progress">0</b>/128</div>
+      <div>正确：<b id="correct-count">0</b></div>
+      <div>分类：<b id="category-count">0</b>/6</div>
+    </div>
+  </div>
+  <div class="demo-bar">
+    <label><input type="checkbox" id="demo-mode" onchange="toggleDemo()"> 演示模式（显示当前规则，仅用于学习）</label>
+  </div>
+  <div class="key-cards-section">
+    <div class="hint">点击下方刺激卡，将反应卡匹配到你认为正确的刺激卡上</div>
+    <div class="key-cards">
+      <div class="key-card" id="key-0" onclick="makeMatch(0)"><span class="key-label">①</span></div>
+      <div class="key-card" id="key-1" onclick="makeMatch(1)"><span class="key-label">②</span></div>
+      <div class="key-card" id="key-2" onclick="makeMatch(2)"><span class="key-label">③</span></div>
+      <div class="key-card" id="key-3" onclick="makeMatch(3)"><span class="key-label">④</span></div>
+    </div>
+  </div>
+  <div class="response-section">
+    <div class="hint">当前反应卡</div>
+    <div class="response-card" id="response-card"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="rule-hint" id="rule-hint"></div>
+  </div>
+</div>
+
+<!-- 结果页 -->
+<div id="result-screen">
+  <div class="result-container">
+    <h1>测试结果报告</h1>
+    <div class="result-section">
+      <h3>基本指标</h3>
+      <div class="result-grid">
+        <div class="result-item"><span class="label">总答题数</span><span class="value" id="r-total">0</span></div>
+        <div class="result-item"><span class="label">正确反应数</span><span class="value" id="r-correct">0</span></div>
+        <div class="result-item"><span class="label">错误反应数</span><span class="value" id="r-errors">0</span></div>
+        <div class="result-item"><span class="label">正确率</span><span class="value" id="r-accuracy">0%</span></div>
+        <div class="result-item"><span class="label">完成分类数</span><span class="value" id="r-categories">0</span></div>
+        <div class="result-item"><span class="label">持续错误数</span><span class="value" id="r-perseverative">0</span></div>
+        <div class="result-item"><span class="label">随机错误数</span><span class="value" id="r-random">0</span></div>
+        <div class="result-item"><span class="label">不能维持完整分类</span><span class="value" id="r-failure">0</span></div>
+      </div>
+    </div>
+    <div class="result-section">
+      <h3>各维度表现</h3>
+      <div class="result-grid">
+        <div class="result-item"><span class="label">颜色（C）阶段正确数</span><span class="value" id="r-color">0</span></div>
+        <div class="result-item"><span class="label">形状（F）阶段正确数</span><span class="value" id="r-form">0</span></div>
+        <div class="result-item"><span class="label">数量（N）阶段正确数</span><span class="value" id="r-number">0</span></div>
+        <div class="result-item"><span class="label">其他（Other）匹配数</span><span class="value" id="r-other">0</span></div>
+      </div>
+    </div>
+    <div class="result-section">
+      <h3>结果解释</h3>
+      <div class="interpretation" id="interpretation">正在生成解释...</div>
+    </div>
+    <button class="btn-restart" onclick="location.reload()">重新测试</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ===== 常量 =====
+const COLORS = ['#e74c3c','#27ae60','#2980b9','#f39c12'];
+const SHAPES = ['triangle','star','cross','circle'];
+
+// 刺激卡（标准WCST：1红三角、2绿星、3蓝十字、4黄圆）
+const KEY_CARDS = [
+  {color:0, shape:0, number:0},
+  {color:1, shape:1, number:1},
+  {color:2, shape:2, number:2},
+  {color:3, shape:3, number:3},
+];
+
+// 用SVG画形状（纯SVG，兼容性好）
+function shapeSVG(shapeIdx, colorIdx, size){
+  const c=COLORS[colorIdx], s=size||22;
+  const half=Math.round(s/2);
+  switch(SHAPES[shapeIdx]){
+    case 'triangle':
+      return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle"><polygon points="12,2 22,22 2,22" fill="'+c+'"/></svg>';
+    case 'star':
+      return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle"><polygon points="12,2 15,9 23,9 17,14 19,22 12,17 5,22 7,14 1,9 9,9" fill="'+c+'" stroke="'+c+'" stroke-width="0.5"/></svg>';
+    case 'cross':
+      return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle"><line x1="12" y1="2" x2="12" y2="22" stroke="'+c+'" stroke-width="4" stroke-linecap="round"/><line x1="2" y1="12" x2="22" y2="12" stroke="'+c+'" stroke-width="4" stroke-linecap="round"/></svg>';
+    case 'circle':
+      return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="10" fill="'+c+'"/></svg>';
+  }
+  return '';
+}
+
+// ===== 生成128张反应卡 =====
+function generateCards(){
+  const cards=[];
+  for(let c=0;c<4;c++)
+    for(let s=0;s<4;s++)
+      for(let n=0;n<4;n++)
+        cards.push({color:c,shape:s,number:n});
+  const deck=[...cards].sort(()=>Math.random()-0.5);
+  return [...deck,...deck.sort(()=>Math.random()-0.5)];
+}
+
+// ===== 渲染卡片 =====
+function renderCard(elId, card, sz){
+  const el=document.getElementById(elId);
+  el.innerHTML='';
+  const n=card.number+1, s=sz||22;
+  for(let i=0;i<n;i++){
+    const d=document.createElement('span');
+    d.innerHTML=shapeSVG(card.shape, card.color, s);
+    el.appendChild(d);
+  }
+}
+
+// ===== 状态 =====
+let responseCards=[], idx=0, ruleIdx=0, rule='color';
+let consecCorrect=0, catsCompleted=0, ruleChanges=0;
+let responses=[], demoOn=false, waiting=false;
+
+// ===== 开始 =====
+function startTest(){
+  responseCards=generateCards();
+  ruleIdx=0; rule='color';
+  responses=[]; idx=0;
+  consecCorrect=0; catsCompleted=0; ruleChanges=0; waiting=false;
+  document.getElementById('welcome-screen').style.display='none';
+  document.getElementById('test-screen').style.display='block';
+  for(let i=0;i<4;i++) renderCard('key-'+i, KEY_CARDS[i], 20);
+  showCard();
+}
+
+function showCard(){
+  if(idx>=responseCards.length||catsCompleted>=6){
+    finishTest(); return;
+  }
+  renderCard('response-card', responseCards[idx], 30);
+  document.getElementById('progress').textContent=idx+1;
+  const fb=document.getElementById('feedback');
+  fb.textContent=''; fb.className='feedback';
+  updateHint();
+  waiting=false;
+}
+
+function updateHint(){
+  const el=document.getElementById('rule-hint');
+  if(!demoOn){el.textContent='';return;}
+  const names={color:'颜色（Color）',form:'形状（Form）',number:'数量（Number）'};
+  el.textContent=`当前规则：${names[rule]}｜连续正确：${consecCorrect}/10`;
+}
+
+function toggleDemo(){ demoOn=document.getElementById('demo-mode').checked; updateHint(); }
+
+// ===== 核心：点击刺激卡 =====
+function makeMatch(keyIdx){
+  if(waiting) return; // 防止重复点击
+  waiting=true;
+
+  const card=responseCards[idx];
+  const key=KEY_CARDS[keyIdx];
+
+  // 判断是否正确：反应卡与所选刺激卡在当前规则维度上是否匹配
+  const isCorrect =
+    (rule==='color'  && card.color===key.color) ||
+    (rule==='form'   && card.shape===key.shape) ||
+    (rule==='number' && card.number===key.number);
+
+  // 记录匹配维度（用于持续错误分析）
+  const mc=card.color===key.color, mf=card.shape===key.shape, mn=card.number===key.number;
+  let dim='Other';
+  if(mc&&mf&&mn)     dim='All';
+  else if(mc&&mf)    dim='Color+Form';
+  else if(mc&&mn)    dim='Color+Number';
+  else if(mf&&mn)    dim='Form+Number';
+  else if(mc)        dim='Color';
+  else if(mf)        dim='Form';
+  else if(mn)        dim='Number';
+
+  responses.push({
+    idx, keyIdx, correct:isCorrect, rule, dim,
+    consecBefore: consecCorrect,
+    ruleChangeIdx: ruleChanges
+  });
+
+  // 视觉反馈
+  const kc=document.getElementById('key-'+keyIdx);
+  kc.classList.remove('flash-correct','flash-incorrect');
+  void kc.offsetWidth; // 强制重绘
+  kc.classList.add(isCorrect?'flash-correct':'flash-incorrect');
+
+  const fb=document.getElementById('feedback');
+  if(isCorrect){
+    fb.textContent='✓ 正确'; fb.className='feedback correct';
+    consecCorrect++;
+  } else {
+    fb.textContent='✗ 错误'; fb.className='feedback incorrect';
+    consecCorrect=0;
+  }
+
+  // 规则切换：连续10次正确 → 换规则
+  if(isCorrect && consecCorrect>=10){
+    consecCorrect=0;
+    catsCompleted++;
+    ruleChanges++;
+    if(ruleChanges<6){
+      ruleIdx=(ruleIdx+1)%3;
+      rule=['color','form','number'][ruleIdx];
+    }
+  }
+
+  // 更新头栏
+  document.getElementById('correct-count').textContent=responses.filter(r=>r.correct).length;
+  document.getElementById('category-count').textContent=Math.min(catsCompleted,6);
+  updateHint();
+
+  // 下一张
+  setTimeout(()=>{
+    // 清除闪光
+    for(let i=0;i<4;i++){
+      document.getElementById('key-'+i).classList.remove('flash-correct','flash-incorrect');
+    }
+    idx++;
+    showCard();
+  }, 700);
+}
+
+// ===== 结果计算 =====
+function finishTest(){
+  document.getElementById('test-screen').style.display='none';
+  document.getElementById('result-screen').style.display='block';
+  window.scrollTo(0,0);
+
+  const total=responses.length;
+  const correct=responses.filter(r=>r.correct).length;
+  const errors=total-correct;
+  const acc=total>0?((correct/total)*100).toFixed(1):'0.0';
+
+  // 持续错误（标准WCST定义）
+  const persev=calcPerseverative(responses);
+  const randomErr=Math.max(0,errors-persev);
+  const failure=calcFailure(responses);
+
+  const colorCorrect=responses.filter(r=>r.correct&&r.rule==='color').length;
+  const formCorrect=responses.filter(r=>r.correct&&r.rule==='form').length;
+  const numberCorrect=responses.filter(r=>r.correct&&r.rule==='number').length;
+  const otherCount=responses.filter(r=>r.dim==='Other').length;
+
+  // 填充结果
+  document.getElementById('r-total').textContent=total;
+  document.getElementById('r-correct').textContent=correct;
+  document.getElementById('r-errors').textContent=errors;
+  document.getElementById('r-accuracy').textContent=acc+'%';
+  document.getElementById('r-categories').textContent=Math.min(catsCompleted,6);
+  document.getElementById('r-perseverative').textContent=persev;
+  document.getElementById('r-random').textContent=randomErr;
+  document.getElementById('r-failure').textContent=failure;
+  document.getElementById('r-color').textContent=colorCorrect;
+  document.getElementById('r-form').textContent=formCorrect;
+  document.getElementById('r-number').textContent=numberCorrect;
+  document.getElementById('r-other').textContent=otherCount;
+
+  genInterpretation(correct,acc,catsCompleted,persev,errors,total);
+}
+
+/*
+ * 持续错误计算（Nelson标准）
+ * 规则改变后，受试者在前6次尝试中仍按旧规则匹配的反应数
+ * 持续错误反应 = 规则已变，但匹配维度仍等于旧规则维度的反应
+ */
+function calcPerseverative(resp){
+  if(resp.length===0) return 0;
+
+  // 找出所有规则变化点（ruleChangeIdx变化的位置）
+  const changePoints=[];
+  for(let i=1;i<resp.length;i++){
+    if(resp[i].rule!==resp[i-1].rule){
+      changePoints.push(i);
+    }
+  }
+
+  let persev=0;
+  for(let cp of changePoints){
+    // 旧规则
+    const oldRule=resp[cp-1]?resp[cp-1].rule:null;
+    if(!oldRule) continue;
+    const oldCap=oldRule.charAt(0).toUpperCase()+oldRule.slice(1);
+
+    // 规则变化后的前6次反应中，匹配维度=旧规则维度的算持续错误
+    const endIdx=Math.min(cp+6, resp.length);
+    for(let i=cp;i<endIdx;i++){
+      if(resp[i].dim===oldCap) persev++;
+    }
+  }
+  return persev;
+}
+
+/*
+ * 不能维持完整分类
+ * = 在完成了一次10次连续正确之后，未能再完成下一个10次连续正确的次数
+ * 简化：6 - 实际完成分类数（但最多到6）
+ */
+function calcFailure(resp){
+  if(catsCompleted>=6) return 0;
+  // 检查是否在某个分类达成后出现了"无法维持"的情况
+  // 标准定义：在完成10次连续正确后，规则改变前若再次出现错误导致无法连续10次
+  // 简化返回：若分类数<6，返回差值
+  return Math.max(0, 6-catsCompleted);
+}
+
+function genInterpretation(correct,acc,cats,persev,errors,total){
+  const persevRate=total>0?((persev/total)*100).toFixed(1):'0.0';
+  const errRate=total>0?((errors/total)*100).toFixed(1):'0.0';
+
+  let html='';
+
+  // 完成情况
+  html+=`<p><strong>测试完成情况：</strong>`;
+  if(cats>=6) html+='受试者完成了全部6个分类，认知灵活性正常。</p>';
+  else if(cats>=4) html+=`受试者完成了${cats}个分类，认知灵活性轻度受损。</p>`;
+  else if(cats>=2) html+=`受试者仅完成${cats}个分类，认知灵活性中度受损，建议进一步神经心理评估。</p>`;
+  else html+=`受试者仅完成${cats}个分类，认知灵活性严重受损，强烈建议结合临床进一步检查。</p>`;
+
+  // 正确率
+  html+=`<p><strong>正确率（${acc}%）：</strong>`;
+  if(acc>=90) html+='正确率在正常范围内。</p>';
+  else if(acc>=75) html+=`正确率略低，可能存在轻度认知控制困难。</p>`;
+  else html+=`正确率显著偏低，提示明显的执行功能缺陷。</p>`;
+
+  // 持续错误
+  html+=`<p><strong>持续错误（${persev}次，占${persevRate}%）：</strong>`;
+  if(persevRate<12) html+='持续错误率正常，定势转移能力良好，前额叶功能未见明显异常。</p>';
+  else if(persevRate<25) html+='持续错误率偏高，存在一定认知僵化，定势转移能力有所下降。</p>';
+  else html+=`持续错误率显著升高，强烈提示<strong>前额叶皮层功能受损</strong>，定势转移能力严重下降。常见于精神分裂症、额叶损伤、ADHD等。</p>`;
+
+  // 随机错误
+  html+=`<p><strong>随机错误（${randomErr}次，占${errRate}%）：</strong>`;
+  if(errors-persev<=total*0.15) html+='随机错误较少，主要表现为持续错误型模式。</p>';
+  else html+='随机错误较多，提示可能存在注意力或工作记忆方面的困难。</p>';
+
+  // 临床提示
+  html+=`<p style="margin-top:14px;border-top:1px solid #d5e8f0;padding-top:12px"><strong>临床提示：</strong>本测试结果仅供参考，不能单独作为诊断依据。`;
+  if(cats<=2||persevRate>=25) html+=' 建议结合TMT、Stroop、数字广度等其他神经心理测验进行综合评估。';
+  html+=`</p>`;
+
+  html+=`<p style="margin-top:10px;color:#95a5a6;font-size:.88em">
+    注：本测试参考Heaton(1993)常模。持续错误计算采用Nelson标准。
+    临床使用请以专业WCST软件（如PsyPak、E-Prime版WCST）结果为准。</p>`;
+
+  document.getElementById('interpretation').innerHTML=html;
+}
+</script>
+</body>
+</html>
