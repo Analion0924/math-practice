@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>加法事实卡 - 打印版</title>
+<style>
+/* ===== 打印设置 ===== */
+@page {
+  size: A4;
+  margin: 8mm;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'SimHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  background: white;
+}
+
+/* 每页容器 */
+.page {
+  page-break-after: always;
+  width: 210mm;
+  height: 297mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 5mm 0;
+}
+
+.page:last-child {
+  page-break-after: auto;
+}
+
+/* 2x2 卡片网格 */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 6mm;
+  width: 190mm;
+  height: 265mm;
+}
+
+/* 单张卡片容器 */
+.card-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 卡片样式 ===== */
+.card {
+  width: 85mm;   /* 略小于标准扑克尺寸，留裁剪边距 */
+  height: 118mm;
+  border: 2px solid #333;
+  border-radius: 5mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 正面 */
+.card-front {
+  background: linear-gradient(145deg, #fffef8, #f5f0e0);
+}
+.card-front .equation {
+  font-size: 32pt;
+  font-weight: 900;
+  color: #2a1a00;
+  letter-spacing: 3px;
+}
+/* 正面角落小标号 */
+.card-front .corner {
+  position: absolute;
+  font-size: 11pt;
+  color: #888;
+}
+.card-front .corner-tl { top: 5mm; left: 6mm; }
+.card-front .corner-br { bottom: 5mm; right: 6mm; transform: rotate(180deg); }
+
+/* 背面 */
+.card-back {
+  background: linear-gradient(145deg, #fffef8, #f5f0e0);
+}
+.card-back .back-border {
+  position: absolute;
+  inset: 4mm;
+  border: 1.5px solid #2980b9;
+  border-radius: 3mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 10mm;
+}
+.card-back .dots-row {
+  display: flex;
+  gap: 3mm;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 3mm 0;
+  padding: 0 5mm;
+}
+.card-back .dot {
+  width: 7mm;
+  height: 7mm;
+  border-radius: 50%;
+  display: inline-block;
+}
+.card-back .dot.red { background: #e74c3c; }
+.card-back .dot.blue { background: #2980b9; }
+.card-back .answer-num {
+  font-size: 28pt;
+  font-weight: 900;
+  color: #27ae60;
+  margin-top: 5mm;
+}
+
+/* 页面提示文字 */
+.page-hint {
+  text-align: center;
+  font-size: 10pt;
+  color: #999;
+  margin-top: 3mm;
+}
+.page-hint b { color: #333; }
+
+/* 屏幕预览样式 */
+@media screen {
+  body {
+    background: #e8e8e8;
+    padding: 10px;
+  }
+  .page {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    margin-bottom: 15px;
+    overflow: hidden;
+  }
+  .page-hint { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+1</div>
+        <div class="equation">1+1</div>
+        <div class="corner corner-br">1+1</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+2</div>
+        <div class="equation">1+2</div>
+        <div class="corner corner-br">1+2</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+3</div>
+        <div class="equation">1+3</div>
+        <div class="corner corner-br">1+3</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+4</div>
+        <div class="equation">1+4</div>
+        <div class="corner corner-br">1+4</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 1 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">2</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">3</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">4</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 2 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+5</div>
+        <div class="equation">1+5</div>
+        <div class="corner corner-br">1+5</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+6</div>
+        <div class="equation">1+6</div>
+        <div class="corner corner-br">1+6</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+7</div>
+        <div class="equation">1+7</div>
+        <div class="corner corner-br">1+7</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+8</div>
+        <div class="equation">1+8</div>
+        <div class="corner corner-br">1+8</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 3 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">6</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">7</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">8</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 4 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">1+9</div>
+        <div class="equation">1+9</div>
+        <div class="corner corner-br">1+9</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+1</div>
+        <div class="equation">2+1</div>
+        <div class="corner corner-br">2+1</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+2</div>
+        <div class="equation">2+2</div>
+        <div class="corner corner-br">2+2</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+3</div>
+        <div class="equation">2+3</div>
+        <div class="corner corner-br">2+3</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 5 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">3</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">4</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 6 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+4</div>
+        <div class="equation">2+4</div>
+        <div class="corner corner-br">2+4</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+5</div>
+        <div class="equation">2+5</div>
+        <div class="corner corner-br">2+5</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+6</div>
+        <div class="equation">2+6</div>
+        <div class="corner corner-br">2+6</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+7</div>
+        <div class="equation">2+7</div>
+        <div class="corner corner-br">2+7</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 7 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">6</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">7</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">8</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 8 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">2+8</div>
+        <div class="equation">2+8</div>
+        <div class="corner corner-br">2+8</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">3+1</div>
+        <div class="equation">3+1</div>
+        <div class="corner corner-br">3+1</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">3+2</div>
+        <div class="equation">3+2</div>
+        <div class="corner corner-br">3+2</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">3+3</div>
+        <div class="equation">3+3</div>
+        <div class="corner corner-br">3+3</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 9 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">4</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">5</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">6</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 10 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">3+4</div>
+        <div class="equation">3+4</div>
+        <div class="corner corner-br">3+4</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">3+5</div>
+        <div class="equation">3+5</div>
+        <div class="corner corner-br">3+5</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">3+6</div>
+        <div class="equation">3+6</div>
+        <div class="corner corner-br">3+6</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">3+7</div>
+        <div class="equation">3+7</div>
+        <div class="corner corner-br">3+7</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 11 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">7</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">8</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 12 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">4+1</div>
+        <div class="equation">4+1</div>
+        <div class="corner corner-br">4+1</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">4+2</div>
+        <div class="equation">4+2</div>
+        <div class="corner corner-br">4+2</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">4+3</div>
+        <div class="equation">4+3</div>
+        <div class="corner corner-br">4+3</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">4+4</div>
+        <div class="equation">4+4</div>
+        <div class="corner corner-br">4+4</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 13 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">5</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">6</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">7</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">8</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 14 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">4+5</div>
+        <div class="equation">4+5</div>
+        <div class="corner corner-br">4+5</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">4+6</div>
+        <div class="equation">4+6</div>
+        <div class="corner corner-br">4+6</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">5+1</div>
+        <div class="equation">5+1</div>
+        <div class="corner corner-br">5+1</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">5+2</div>
+        <div class="equation">5+2</div>
+        <div class="corner corner-br">5+2</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 15 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">6</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">7</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 16 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">5+3</div>
+        <div class="equation">5+3</div>
+        <div class="corner corner-br">5+3</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">5+4</div>
+        <div class="equation">5+4</div>
+        <div class="corner corner-br">5+4</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">5+5</div>
+        <div class="equation">5+5</div>
+        <div class="corner corner-br">5+5</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">6+1</div>
+        <div class="equation">6+1</div>
+        <div class="corner corner-br">6+1</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 17 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">8</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">7</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 18 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">6+2</div>
+        <div class="equation">6+2</div>
+        <div class="corner corner-br">6+2</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">6+3</div>
+        <div class="equation">6+3</div>
+        <div class="corner corner-br">6+3</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">6+4</div>
+        <div class="equation">6+4</div>
+        <div class="corner corner-br">6+4</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">7+1</div>
+        <div class="equation">7+1</div>
+        <div class="corner corner-br">7+1</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 19 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">8</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">8</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 20 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">7+2</div>
+        <div class="equation">7+2</div>
+        <div class="corner corner-br">7+2</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">7+3</div>
+        <div class="equation">7+3</div>
+        <div class="corner corner-br">7+3</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">8+1</div>
+        <div class="equation">8+1</div>
+        <div class="corner corner-br">8+1</div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">8+2</div>
+        <div class="equation">8+2</div>
+        <div class="corner corner-br">8+2</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 21 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">9</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-hint">第 22 页（背面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-front">
+        <div class="corner corner-tl">9+1</div>
+        <div class="equation">9+1</div>
+        <div class="corner corner-br">9+1</div>
+      </div>
+    </div>
+    <div class="card-cell"></div>
+    <div class="card-cell"></div>
+    <div class="card-cell"></div>
+  </div>
+  <div class="page-hint">第 23 页（正面）— 共 24 页</div>
+</div>
+
+<div class="page">
+  <div class="card-grid">
+    <div class="card-cell">
+      <div class="card card-back">
+        <div class="back-border">
+          <div class="dots-row">
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot red"></span>
+          <span class="dot blue"></span>
+          </div>
+          <div class="answer-num">10</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-cell"></div>
+    <div class="card-cell"></div>
+    <div class="card-cell"></div>
+  </div>
+  <div class="page-hint">第 24 页（背面）— 共 24 页</div>
+</div>
+
+</body>
+</html>
