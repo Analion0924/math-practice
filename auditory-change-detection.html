@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>听觉变化检测 - Auditory Change Detection</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; }
+
+.table-bg {
+  position: fixed; inset: 0;
+  background: linear-gradient(160deg, #c9a66b 0%, #d4b58c 25%, #c9956a 50%, #deb887 75%, #d2a866 100%);
+  z-index: 0;
+}
+.table-bg::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(88deg, transparent 0px, rgba(139,90,43,0.04) 2px, transparent 4px),
+    repeating-linear-gradient(92deg, transparent 0px, rgba(80,50,20,0.03) 1px, transparent 3px),
+    radial-gradient(ellipse at 30% 20%, rgba(255,245,220,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(180,130,70,0.1) 0%, transparent 40%);
+  pointer-events: none;
+}
+.table-bg::after {
+  content: ''; position: absolute; inset: 0;
+  box-shadow: inset 0 0 120px rgba(60,35,10,0.25), inset 0 0 60px rgba(40,20,5,0.15);
+  pointer-events: none;
+}
+
+.container {
+  position: relative; z-index: 1; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+.gear-btn {
+  position: fixed; top: 14px; right: 14px; z-index: 100;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(255,250,240,0.9); border: 2px solid #c9a66b;
+  font-size: 1.5em; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(60,30,10,0.25);
+  transition: transform 0.3s;
+}
+.gear-btn:hover { transform: rotate(60deg) scale(1.1); }
+
+.settings-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.45);
+  align-items: center; justify-content: center;
+}
+.settings-overlay.active { display: flex; }
+.settings-panel {
+  background: rgba(255,250,240,0.98); border-radius: 18px;
+  padding: 26px 24px; width: 92%; max-width: 400px;
+  box-shadow: 0 8px 40px rgba(60,30,10,0.35);
+  max-height: 85vh; overflow-y: auto;
+}
+.settings-panel h3 {
+  text-align: center; font-size: 1.25em; color: #5a3e1b;
+  margin-bottom: 18px; font-weight: 900;
+}
+.setting-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid rgba(201,166,107,0.25);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 1.05em; color: #5a3e1b; font-weight: 600; }
+.setting-control { display: flex; gap: 6px; }
+.setting-control button {
+  padding: 5px 14px; border-radius: 14px; border: 2px solid #c9a66b;
+  background: rgba(255,252,245,0.9); color: #5a3e1b;
+  font-size: 0.92em; cursor: pointer; transition: all 0.2s; font-weight: 600;
+}
+.setting-control button.active {
+  background: linear-gradient(145deg, #c9a66b, #b8944a);
+  color: white; border-color: #a07a3a;
+}
+.setting-control button:hover { transform: scale(1.05); }
+.settings-close {
+  display: block; margin: 16px auto 0; padding: 8px 32px;
+  border-radius: 20px; border: none;
+  background: linear-gradient(145deg, #c9a66b, #b8944a);
+  color: white; font-size: 1em; cursor: pointer; font-weight: bold;
+  box-shadow: 0 2px 8px rgba(60,30,10,0.25);
+}
+
+#home-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; height: 100%; padding: 20px;
+}
+.home-title {
+  font-size: 2.4em; color: #fff;
+  text-shadow: 0 2px 8px rgba(60,30,10,0.5), 0 1px 3px rgba(0,0,0,0.3);
+  margin-bottom: 6px; letter-spacing: 4px; font-weight: 900;
+}
+.home-sub {
+  font-size: 1.15em; color: rgba(255,255,255,0.88);
+  text-shadow: 0 1px 4px rgba(60,30,10,0.4);
+  margin-bottom: 10px; text-align: center; line-height: 1.6;
+}
+.home-sub-en {
+  font-size: 0.82em; color: rgba(255,255,255,0.6);
+  margin-bottom: 24px; font-style: italic;
+}
+.start-btn {
+  background: linear-gradient(145deg, #27ae60, #1e8449);
+  color: white; border: none; padding: 15px 52px; font-size: 1.25em;
+  border-radius: 50px; cursor: pointer; transition: all 0.3s;
+  box-shadow: 0 4px 18px rgba(39,174,96,0.45), 0 2px 4px rgba(0,0,0,0.2);
+  font-weight: bold; letter-spacing: 2px;
+}
+.start-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 6px 24px rgba(39,174,96,0.55); }
+
+#practice-screen {
+  display: none; width: 100%; height: 100%;
+  flex-direction: column; align-items: center; padding-top: 12px;
+}
+.practice-header {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 92%; max-width: 500px; background: rgba(255,250,240,0.92);
+  padding: 10px 18px; border-radius: 14px; margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(60,30,10,0.15);
+}
+.practice-header h2 { font-size: 1.05em; color: #8b5a00; font-weight: bold; }
+.back-btn {
+  background: rgba(150,120,70,0.7); color: white; border: none;
+  padding: 5px 14px; border-radius: 14px; cursor: pointer; font-size: 0.85em; transition: 0.2s;
+}
+.back-btn:hover { background: rgba(120,90,50,0.85); }
+.stats { display: flex; gap: 12px; font-size: 0.95em; color: #5a3e1b; }
+.stats b { color: #c0392b; }
+
+.phase-msg {
+  font-size: 1.3em; font-weight: bold; color: #fff;
+  text-shadow: 0 1px 4px rgba(60,30,10,0.4);
+  margin-bottom: 10px; text-align: center; min-height: 42px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ===== 转场过渡遮罩（方案4） ===== */
+.transition-overlay {
+  display: none; position: fixed; inset: 0; z-index: 150;
+  background: rgba(0,0,0,0.35);
+  align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.transition-overlay.active { display: flex; }
+.transition-icon {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3.2em; color: white;
+  box-shadow: 0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.3);
+  animation: iconPulse 1.2s ease-in-out infinite;
+}
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.3); }
+  50% { transform: scale(1.15); box-shadow: 0 0 50px rgba(52,152,219,0.8), 0 0 80px rgba(52,152,219,0.5); }
+}
+.transition-text {
+  margin-top: 24px; font-size: 1.5em; font-weight: 900; color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  animation: fadeInText 0.5s ease-out;
+}
+.transition-sub {
+  margin-top: 8px; font-size: 1em; color: rgba(255,255,255,0.75);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+@keyframes fadeInText {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.sound-display {
+  width: 200px; height: 200px; border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255,252,245,0.95), rgba(240,234,216,0.95));
+  border: 4px solid #c9a66b;
+  box-shadow: 0 6px 28px rgba(60,30,10,0.3), inset 0 1px 0 rgba(255,255,255,0.8);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px; position: relative;
+}
+.sound-display.playing {
+  animation: pulse 0.8s ease-in-out infinite alternate;
+  border-color: #27ae60;
+  box-shadow: 0 6px 28px rgba(39,174,96,0.4), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
+}
+.sound-icon { font-size: 4.5em; }
+.sound-text {
+  position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%);
+  font-size: 1.5em; font-weight: 900; color: #5a3e1b;
+  white-space: nowrap;
+}
+
+.heard-items {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  margin-bottom: 14px; min-height: 44px;
+}
+.heard-item {
+  background: rgba(255,250,240,0.95); border: 2px solid #c9a66b;
+  border-radius: 10px; padding: 6px 14px;
+  font-size: 1.2em; font-weight: bold; color: #5a3e1b;
+  box-shadow: 0 2px 6px rgba(60,30,10,0.15);
+}
+
+.options-area {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+  padding: 10px 20px 14px; width: 100%; max-width: 480px;
+}
+.opt-btn {
+  min-width: 60px; height: 52px; border-radius: 14px;
+  border: 3px solid #c9a66b; background: rgba(255,252,245,0.95);
+  font-size: 1.3em; font-weight: bold; color: #3a2408; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+  padding: 0 16px; box-shadow: 0 2px 6px rgba(60,30,10,0.15);
+}
+.opt-btn:hover { background: #f5ecd8; transform: scale(1.08); }
+.opt-btn.correct-ans { background: #d5f5e3; border-color: #27ae60; color: #27ae60; animation: correctPop 0.5s; }
+.opt-btn.wrong-ans { background: #fadbd8; border-color: #e74c3c; color: #e74c3c; animation: wrongShake 0.4s; }
+@keyframes correctPop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes wrongShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+.feedback-msg {
+  text-align: center; font-size: 1.25em; font-weight: bold;
+  height: 38px; display: flex; align-items: center; justify-content: center;
+  color: #fff; text-shadow: 0 1px 4px rgba(60,30,10,0.4);
+}
+.feedback-msg.correct { color: #2ecc71; }
+.feedback-msg.wrong { color: #e74c3c; }
+
+.next-btn {
+  display: block; margin: 8px auto 14px;
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  color: white; border: none; padding: 10px 36px; font-size: 1em;
+  border-radius: 50px; cursor: pointer; transition: 0.3s;
+  box-shadow: 0 3px 12px rgba(41,128,185,0.35);
+}
+.next-btn:hover { transform: translateY(-2px); }
+
+.progress-bar {
+  width: 92%; max-width: 500px; height: 10px; border-radius: 5px;
+  background: rgba(255,250,240,0.5); margin-bottom: 10px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 5px;
+  background: linear-gradient(90deg, #27ae60, #2ecc71);
+  transition: width 0.4s ease;
+}
+
+#result-screen {
+  display: none; width: 100%; height: 100%;
+  align-items: center; justify-content: center;
+}
+.result-card {
+  background: rgba(255,250,240,0.95); border-radius: 20px;
+  padding: 30px 28px; box-shadow: 0 4px 24px rgba(60,30,10,0.25);
+  max-width: 420px; text-align: center;
+}
+.result-card h2 { font-size: 1.5em; color: #c0392b; margin-bottom: 12px; }
+.result-emoji { font-size: 3.5em; margin-bottom: 10px; }
+.result-stats { text-align: left; margin: 14px 0; }
+.result-stat {
+  display: flex; justify-content: space-between; padding: 8px 14px;
+  background: rgba(201,166,107,0.12); border-radius: 8px; margin-bottom: 6px;
+}
+.result-stat .label { color: #666; }
+.result-stat .value { font-weight: bold; color: #333; }
+.stars { font-size: 1.8em; margin: 12px 0; }
+.btn-retry {
+  background: linear-gradient(145deg, #2ecc71, #27ae60); color: white;
+  border: none; padding: 11px 32px; font-size: 0.95em; border-radius: 50px;
+  cursor: pointer; margin: 6px; transition: 0.3s; box-shadow: 0 3px 10px rgba(39,174,96,0.35);
+}
+.btn-home {
+  background: linear-gradient(145deg, #e67e22, #d35400); color: white;
+  border: none; padding: 11px 32px; font-size: 0.95em; border-radius: 50px;
+  cursor: pointer; margin: 6px; transition: 0.3s; box-shadow: 0 3px 10px rgba(230,126,34,0.35);
+}
+
+.firework {
+  position: fixed; pointer-events: none; z-index: 999;
+  font-size: 1.4em; animation: fireworkUp 1s ease-out forwards;
+  text-shadow: 0 0 4px rgba(0,0,0,0.2);
+}
+@keyframes fireworkUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-120px) scale(1.5); }
+}
+
+@media (max-width: 600px) {
+  .home-title { font-size: 1.8em; }
+  .home-sub { font-size: 1em; }
+  .sound-display { width: 160px; height: 160px; }
+  .sound-icon { font-size: 3.5em; }
+  .opt-btn { min-width: 50px; height: 44px; font-size: 1.1em; }
+  .heard-item { font-size: 1em; padding: 4px 10px; }
+  .transition-icon { width: 80px; height: 80px; font-size: 2.5em; }
+  .transition-text { font-size: 1.2em; }
+}
+</style>
+</head>
+<body>
+
+<div class="table-bg"></div>
+<div class="container">
+
+<button class="gear-btn" id="gear-btn" onclick="openSettings()">⚙️</button>
+
+<!-- 设置面板 -->
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-panel">
+    <h3>⚙️ 设置 / Settings</h3>
+    
+    <div class="setting-row">
+      <span class="setting-label">材料类型 / Material</span>
+      <div class="setting-control">
+        <button id="mat-num" class="active" onclick="setSetting('material','num',this)">数字</button>
+        <button id="mat-letter" onclick="setSetting('material','letter',this)">字母</button>
+        <button id="mat-both" onclick="setSetting('material','both',this)">混合</button>
+      </div>
+    </div>
+    
+    <div class="setting-row">
+      <span class="setting-label">发音语言 / Language</span>
+      <div class="setting-control">
+        <button id="lang-zh" class="active" onclick="setSetting('language','zh',this)">中文</button>
+        <button id="lang-en" onclick="setSetting('language','en',this)">English</button>
+      </div>
+    </div>
+    
+    <div class="setting-row">
+      <span class="setting-label">显示文字 / Show Text</span>
+      <div class="setting-control">
+        <button id="show-on" class="active" onclick="setSetting('showText','true',this)">显示</button>
+        <button id="show-off" onclick="setSetting('showText','false',this)">不显示</button>
+      </div>
+    </div>
+    
+    <div class="setting-row">
+      <span class="setting-label">起始数量 / Start Count</span>
+      <div class="setting-control">
+        <button id="start-2" onclick="setSetting('startCount','2',this)">2个</button>
+        <button id="start-3" class="active" onclick="setSetting('startCount','3',this)">3个</button>
+        <button id="start-4" onclick="setSetting('startCount','4',this)">4个</button>
+      </div>
+    </div>
+    
+    <div class="setting-row">
+      <span class="setting-label">音效 / Sound FX</span>
+      <div class="setting-control">
+        <button id="sfx-on" class="active" onclick="setSetting('soundFX','true',this)">开启</button>
+        <button id="sfx-off" onclick="setSetting('soundFX','false',this)">关闭</button>
+      </div>
+    </div>
+    
+    <div class="setting-row">
+      <span class="setting-label">自动下一题 / Auto Next</span>
+      <div class="setting-control">
+        <button id="auto-on" class="active" onclick="setSetting('autoNext','true',this)">开启</button>
+        <button id="auto-off" onclick="setSetting('autoNext','false',this)">关闭</button>
+      </div>
+    </div>
+    
+    <button class="settings-close" onclick="closeSettings()">✅ 确定 / Confirm</button>
+  </div>
+</div>
+
+<!-- 转场过渡遮罩（方案4） -->
+<div class="transition-overlay" id="transition-overlay">
+  <div class="transition-icon">🔊</div>
+  <div class="transition-text">再听一次！</div>
+  <div class="transition-sub">仔细听，少了哪个？</div>
+</div>
+
+<div id="home-screen">
+  <h1 class="home-title">听觉变化检测</h1>
+  <p class="home-sub">仔细听声音序列，找出消失的那个！</p>
+  <p class="home-sub-en">Listen to the sound sequence, find what disappeared!</p>
+  <button class="start-btn" onclick="startGame()">开始练习 ➜</button>
+</div>
+
+<div id="practice-screen">
+  <div class="practice-header">
+    <h2>听觉变化检测</h2>
+    <button class="back-btn" onclick="goHome()">返回</button>
+    <div class="stats">
+      <span>第<b id="q-index">1</b>/10</span>
+      <span>正确:<b id="p-correct">0</b></span>
+      <span>错误:<b id="p-errors">0</b></span>
+    </div>
+  </div>
+  
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  
+  <div class="phase-msg" id="phase-msg">准备开始...</div>
+  
+  <div class="sound-display" id="sound-display">
+    <div class="sound-icon" id="sound-icon">🔊</div>
+    <div class="sound-text" id="sound-text"></div>
+  </div>
+  
+  <div class="heard-items" id="heard-items"></div>
+  
+  <div class="feedback-msg" id="feedback-msg"></div>
+  <div class="options-area" id="options-area"></div>
+  <button class="next-btn" id="next-btn" onclick="nextCard()" style="display:none">下一题 →</button>
+</div>
+
+<div id="result-screen">
+  <div class="result-card">
+    <div class="result-emoji" id="result-emoji">🎉</div>
+    <h2>练习完成！</h2>
+    <div class="stars" id="result-stars"></div>
+    <div class="result-stats">
+      <div class="result-stat"><span class="label">总题数</span><span class="value" id="rs-total">0</span></div>
+      <div class="result-stat"><span class="label">正确题数</span><span class="value" id="rs-correct">0</span></div>
+      <div class="result-stat"><span class="label">正确率</span><span class="value" id="rs-accuracy">0%</span></div>
+      <div class="result-stat"><span class="label">最高数量</span><span class="value" id="rs-max">0</span></div>
+    </div>
+    <div class="result-comment" id="result-comment"></div>
+    <button class="btn-retry" onclick="retryGame()">再练一次 🔄</button>
+    <button class="btn-home" onclick="goHome()">返回首页 🏠</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+var settings = {
+  material: 'num',
+  language: 'zh',
+  showText: true,
+  startCount: 3,
+  soundFX: true,
+  autoNext: true
+};
+
+function openSettings() {
+  document.getElementById('settings-overlay').classList.add('active');
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('active');
+}
+function setSetting(key, value, btn) {
+  if (key === 'startCount') settings[key] = parseInt(value);
+  else if (key === 'showText' || key === 'soundFX' || key === 'autoNext') settings[key] = (value === 'true');
+  else settings[key] = value;
+  var parent = btn.parentElement;
+  var siblings = parent.querySelectorAll('button');
+  for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove('active');
+  btn.classList.add('active');
+}
+
+var synth = window.speechSynthesis;
+function speak(text, lang, callback) {
+  if (!synth) { if (callback) callback(); return; }
+  synth.cancel();
+  var utter = new SpeechSynthesisUtterance(text);
+  utter.lang = (lang === 'zh') ? 'zh-CN' : 'en-US';
+  utter.rate = 0.85;
+  utter.pitch = 1.0;
+  utter.volume = 1.0;
+  if (callback) utter.onend = callback;
+  setTimeout(function() { synth.speak(utter); }, 80);
+}
+
+var NUM_POOL = ['0','1','2','3','4','5','6','7','8','9'];
+var LETTER_POOL = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+
+function getPool() {
+  if (settings.material === 'num') return NUM_POOL;
+  if (settings.material === 'letter') return LETTER_POOL;
+  return NUM_POOL.concat(LETTER_POOL);
+}
+
+/* ===== 修改点1：始终返回阿拉伯数字/字母，不再转中文 ===== */
+function getItemText(item) {
+  return item;
+}
+
+var totalItems = 3;
+var currentRound = 0;
+var pCorrect = 0;
+var pErrors = 0;
+var consecutiveErrors = 0;
+var maxItems = 0;
+var currentSequence = [];
+var missingItem = '';
+var answered = false;
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function startGame() {
+  totalItems = settings.startCount;
+  currentRound = 0;
+  pCorrect = 0;
+  pErrors = 0;
+  consecutiveErrors = 0;
+  maxItems = totalItems;
+  
+  document.getElementById('home-screen').style.display = 'none';
+  document.getElementById('practice-screen').style.display = 'flex';
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('p-correct').textContent = '0';
+  document.getElementById('p-errors').textContent = '0';
+  
+  playRound();
+}
+
+/* ===== 修改点2：在两次播放之间加入转场（方案4） ===== */
+function playRound() {
+  if (currentRound >= 10) { finishGame(); return; }
+  answered = false;
+  currentRound++;
+
+  document.getElementById('q-index').textContent = currentRound;
+  document.getElementById('progress-fill').style.width = ((currentRound - 1) / 10 * 100) + '%';
+  document.getElementById('feedback-msg').textContent = '';
+  document.getElementById('feedback-msg').className = 'feedback-msg';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('heard-items').innerHTML = '';
+  document.getElementById('sound-text').textContent = '';
+
+  var pool = getPool();
+  var shuffled = shuffle(pool);
+  currentSequence = shuffled.slice(0, totalItems);
+
+  var missIdx = Math.floor(Math.random() * currentSequence.length);
+  missingItem = currentSequence[missIdx];
+  var sequence2 = currentSequence.slice();
+  sequence2.splice(missIdx, 1);
+
+  document.getElementById('phase-msg').textContent = '👂 请仔细听...';
+  document.getElementById('sound-icon').textContent = '🔊';
+
+  /* 第一遍播放，结束后显示转场 */
+  playSequence(currentSequence, function() {
+    showTransition(function() {
+      /* 转场结束后播放第二遍 */
+      document.getElementById('phase-msg').textContent = '🤔 哪个消失了？';
+      playSequence(sequence2, function() {
+        showOptions(missingItem, currentSequence);
+      });
+    });
+  });
+}
+
+/* 转场效果：图标脉冲 + 提示文字（方案4） */
+function showTransition(callback) {
+  var overlay = document.getElementById('transition-overlay');
+  overlay.classList.add('active');
+
+  /* 1.8秒后关闭转场，执行回调 */
+  setTimeout(function() {
+    overlay.classList.remove('active');
+    if (callback) callback();
+  }, 1800);
+}
+
+function playSequence(seq, callback) {
+  var display = document.getElementById('sound-display');
+  var icon = document.getElementById('sound-icon');
+  var txt = document.getElementById('sound-text');
+  var delay = 900;
+  var i = 0;
+
+  function playNext() {
+    if (i >= seq.length) {
+      display.classList.remove('playing');
+      icon.textContent = '🔊';
+      if (callback) setTimeout(callback, 400);
+      return;
+    }
+    var item = seq[i];
+    var text = getItemText(item);
+
+    display.classList.add('playing');
+    icon.textContent = '🔊';
+    if (settings.showText) {
+      txt.textContent = text;
+    } else {
+      txt.textContent = '?';
+    }
+
+    speak(text, settings.language, null);
+
+    i++;
+    setTimeout(playNext, delay);
+  }
+
+  playNext();
+}
+
+function showOptions(missing, fullSeq) {
+  var area = document.getElementById('options-area');
+  area.innerHTML = '';
+
+  var pool = getPool();
+  var distractors = [];
+  var used = {};
+  used[missing] = true;
+
+  while (distractors.length < 3) {
+    var r = pool[Math.floor(Math.random() * pool.length)];
+    if (!used[r]) {
+      used[r] = true;
+      distractors.push(r);
+    }
+  }
+
+  var options = [missing].concat(distractors);
+  options = shuffle(options);
+
+  for (var j = 0; j < options.length; j++) {
+    (function(val) {
+      var btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = getItemText(val);
+      btn.onclick = function() { selectAnswer(val); };
+      area.appendChild(btn);
+    })(options[j]);
+  }
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  var btns = document.querySelectorAll('.opt-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].style.pointerEvents = 'none';
+
+  var fb = document.getElementById('feedback-msg');
+
+  if (selected === missingItem) {
+    pCorrect++;
+    consecutiveErrors = 0;
+    document.getElementById('p-correct').textContent = pCorrect;
+    fb.textContent = getCorrectPhrase();
+    fb.className = 'feedback-msg correct';
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].textContent === getItemText(missingItem)) {
+        btns[i].classList.add('correct-ans');
+      }
+    }
+    totalItems++;
+    if (totalItems > maxItems) maxItems = totalItems;
+    if (settings.soundFX) playCorrectSound();
+    launchFirework(document.getElementById('sound-display'));
+  } else {
+    pErrors++;
+    consecutiveErrors++;
+    document.getElementById('p-errors').textContent = pErrors;
+    fb.textContent = '再想想~ 正确答案是 ' + getItemText(missingItem);
+    fb.className = 'feedback-msg wrong';
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].textContent === getItemText(missingItem)) {
+        btns[i].classList.add('correct-ans');
+      }
+      if (btns[i].textContent === getItemText(selected)) {
+        btns[i].classList.add('wrong-ans');
+      }
+    }
+    if (consecutiveErrors >= 2 && totalItems > 2) {
+      totalItems--;
+      consecutiveErrors = 0;
+    }
+    if (settings.soundFX) playWrongSound();
+  }
+
+  if (settings.autoNext) {
+    setTimeout(function() { nextCard(); }, 1800);
+  } else {
+    document.getElementById('next-btn').style.display = 'inline-block';
+  }
+}
+
+function nextCard() {
+  playRound();
+}
+
+function finishGame() {
+  document.getElementById('practice-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'flex';
+  window.scrollTo(0, 0);
+
+  var total = 10;
+  var acc = total > 0 ? Math.round((pCorrect / total) * 100) : 0;
+  var emoji = '', stars = '', comment = '';
+  if (acc >= 90) { emoji = '🎉'; stars = '⭐⭐⭐⭐⭐'; comment = '太棒了！你的听觉记忆超强！'; }
+  else if (acc >= 70) { emoji = '😄'; stars = '⭐⭐⭐⭐'; comment = '很不错！继续加油！'; }
+  else if (acc >= 50) { emoji = '😊'; stars = '⭐⭐⭐'; comment = '还不错，多练习会更棒！'; }
+  else { emoji = '💪'; stars = '⭐⭐'; comment = '没关系，多练习就能进步！'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-stars').textContent = stars;
+  document.getElementById('rs-total').textContent = total;
+  document.getElementById('rs-correct').textContent = pCorrect;
+  document.getElementById('rs-accuracy').textContent = acc + '%';
+  document.getElementById('rs-max').textContent = maxItems;
+  document.getElementById('result-comment').textContent = comment;
+
+  if (settings.soundFX) {
+    for (var i = 0; i < 10; i++) setTimeout(function() { launchFireworkRandom(); }, i * 100);
+  }
+}
+
+function getCorrectPhrase() {
+  var phrases = ['太棒了！','正确！','你真聪明！','厉害！','对了！','好样的！'];
+  return phrases[Math.floor(Math.random() * phrases.length)];
+}
+
+var audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playCorrectSound() {
+  try {
+    var ctx = getAudioCtx();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(523, ctx.currentTime);
+    o.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+    o.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.5);
+  } catch(e) {}
+}
+function playWrongSound() {
+  try {
+    var ctx = getAudioCtx();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(330, ctx.currentTime);
+    o.frequency.setValueAtTime(260, ctx.currentTime + 0.15);
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+function launchFirework(refEl) {
+  try {
+    var rect = refEl.getBoundingClientRect();
+    var emojis = ['✨','⭐','🌟','🎉','🎊'];
+    for (var i = 0; i < 5; i++) {
+      var fw = document.createElement('div');
+      fw.className = 'firework';
+      fw.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      fw.style.left = (rect.left + Math.random() * rect.width) + 'px';
+      fw.style.top = (rect.top + Math.random() * rect.height) + 'px';
+      document.body.appendChild(fw);
+      (function(el) { setTimeout(function() { if(el && el.parentNode) el.remove(); }, 1000); })(fw);
+    }
+  } catch(e) {}
+}
+function launchFireworkRandom() {
+  try {
+    var emojis = ['✨','⭐','🌟','🎉','🎊','🎈'];
+    var fw = document.createElement('div');
+    fw.className = 'firework';
+    fw.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    fw.style.left = Math.random() * window.innerWidth + 'px';
+    fw.style.top = Math.random() * window.innerHeight * 0.6 + 'px';
+    document.body.appendChild(fw);
+    setTimeout(function() { fw.remove(); }, 1000);
+  } catch(e) {}
+}
+
+function goHome() {
+  document.getElementById('home-screen').style.display = 'flex';
+  document.getElementById('practice-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'none';
+}
+
+function retryGame() { startGame(); }
+</script>
+</body>
+</html>
