@@ -371,8 +371,8 @@ function loadQuestion(){
   });
 
   renderGrid();
-  // 自动播放句子
-  setTimeout(()=>speak(sentenceText()), 350);
+  // 自动播放句子（先停顿 2 秒，等待图片加载）
+  setTimeout(()=>speak(sentenceText()), 2000);
 }
 
 function sentenceText(){
