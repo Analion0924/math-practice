@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>因为……所以…… · 语言练习</title>
+<style>
+  :root{
+    --bg:#FFF0E6; --card:#FFFFFF; --ink:#3A3530; --muted:#9C948A;
+    --primary:#FF6B4A; --primary-d:#E04F30; --blue:#5BA3D6; --green:#4ECB71;
+    --red:#E86B58; --yellow:#FFD05C; --line:#F0E2D0;
+    --radius:20px; --shadow:0 8px 24px rgba(180,130,100,.18);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+    background:var(--bg); color:var(--ink);
+    display:flex; justify-content:center; align-items:flex-start;
+    min-height:100%; overflow-x:hidden;
+  }
+  .wrap{width:100%; max-width:760px; padding:18px 16px 40px; position:relative;}
+  .screen{display:none;}
+  .screen.active{display:block; animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  h1{font-size:32px; font-weight:800; text-align:center; margin:8px 0 2px;}
+  .sub{text-align:center; color:var(--muted); font-size:15px; margin-bottom:22px; letter-spacing:.5px;}
+
+  .card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:22px; margin-bottom:18px;
+  }
+
+  .btn{
+    border:none; border-radius:16px; font-size:20px; font-weight:700;
+    padding:16px 22px; cursor:pointer; transition:transform .12s, box-shadow .12s;
+    background:var(--primary); color:#fff; box-shadow:0 5px 0 var(--primary-d);
+  }
+  .btn:active{transform:translateY(3px); box-shadow:0 2px 0 var(--primary-d);}
+  .btn.blue{background:var(--blue); box-shadow:0 5px 0 #3E82AD;}
+  .btn.green{background:var(--green); box-shadow:0 5px 0 #38A85A;}
+  .btn.ghost{background:#F3ECE0; color:var(--ink); box-shadow:0 5px 0 #DFD3BF;}
+  .btn.big{font-size:26px; padding:20px; width:100%;}
+  .btn:disabled{opacity:.5; box-shadow:none;}
+
+  .gear{
+    position:fixed; top:16px; right:16px; width:46px; height:46px; border-radius:50%;
+    background:var(--card); box-shadow:var(--shadow); border:none; cursor:pointer;
+    font-size:24px; z-index:30; display:flex; align-items:center; justify-content:center;
+  }
+  .panel{
+    position:fixed; inset:0; background:rgba(60,50,40,.35); z-index:40;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .panel.show{display:flex;}
+  .panel .box{
+    background:var(--card); width:100%; max-width:760px; border-radius:24px 24px 0 0;
+    padding:24px 22px calc(24px + env(safe-area-inset-bottom)); box-shadow:var(--shadow);
+  }
+  .panel h3{margin:0 0 16px; font-size:20px;}
+  .row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none;}
+  .row label{font-size:16px; font-weight:600;}
+  .row input[type=range]{width:160px;}
+  .switch{position:relative; width:54px; height:30px; background:#D9CFBE; border-radius:30px; cursor:pointer; transition:background .2s;}
+  .switch.on{background:var(--green);}
+  .switch::after{content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; background:#fff; border-radius:50%; transition:left .2s;}
+  .switch.on::after{left:27px;}
+  .seg{display:flex; gap:8px;}
+  .seg button{border:none; background:#F3ECE0; border-radius:12px; padding:8px 14px; font-size:15px; font-weight:700; cursor:pointer; color:var(--muted);}
+  .seg button.sel{background:var(--primary); color:#fff;}
+
+  /* practice */
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .progress{font-size:16px; font-weight:700; color:var(--muted);}
+  .stars{font-size:18px; letter-spacing:2px;}
+  .sentence{
+    display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;
+    font-size:24px; font-weight:800; margin:6px 0 4px; text-align:center;
+  }
+  .slot{
+    width:96px; height:96px; border-radius:16px; border:3px dashed #D9CFBE;
+    background:#FBF6EE; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; overflow:hidden; position:relative; transition:.15s;
+  }
+  .slot .tag{position:absolute; top:4px; left:6px; font-size:12px; font-weight:800; color:var(--muted);}
+  .slot.filled{border-style:solid; border-color:var(--blue); background:#EAF4FC;}
+  .slot.correct{border-color:var(--green); background:#EAF6EE;}
+  .slot.wrong{border-color:var(--red); background:#FCEAE6; animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+  .slot img{width:100%; height:100%; object-fit:contain;}
+  .conn{font-size:22px; color:var(--primary); font-weight:800;}
+
+  .listen{
+    display:flex; justify-content:center; gap:12px; margin:14px 0 4px;
+  }
+  .speaker{
+    width:64px; height:64px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--blue); color:#fff; font-size:30px; box-shadow:0 5px 0 #3E82AD;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .speaker:active{transform:translateY(3px); box-shadow:0 2px 0 #3E82AD;}
+  .hint{text-align:center; color:var(--muted); font-size:14px; margin:2px 0 14px;}
+
+  .grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:6px;
+  }
+  .choice{
+    background:#FBF6EE; border:3px solid #F0E6D6; border-radius:16px; overflow:hidden;
+    cursor:pointer; transition:.12s; aspect-ratio:1/1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:4px;
+  }
+  .choice img{width:100%; height:78%; object-fit:contain;}
+  .choice .lab{font-size:13px; font-weight:700; margin-top:2px; color:var(--ink);}
+  .choice:active{transform:scale(.95);}
+  .choice.used{opacity:.35; pointer-events:none;}
+  .choice.pick{animation:pop .25s;}
+  @keyframes pop{0%{transform:scale(.8);}60%{transform:scale(1.08);}100%{transform:scale(1);}}
+
+  .feedback{text-align:center; font-size:20px; font-weight:800; min-height:30px; margin:10px 0;}
+  .feedback.ok{color:var(--green);}
+  .feedback.no{color:var(--red);}
+
+  .readbox{display:none; margin-top:6px; animation:fade .3s;}
+  .readbox.show{display:block;}
+  .readbox .line{display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; font-size:22px; font-weight:800;}
+  .readbox .mini{width:60px;height:60px;border-radius:12px;overflow:hidden;display:inline-flex;}
+  .readbox .mini img{width:100%;height:100%;object-fit:contain;}
+  .readbtns{display:flex; gap:12px; margin-top:16px;}
+
+  .done-emoji{font-size:64px; text-align:center;}
+  .done-score{text-align:center; font-size:22px; font-weight:800; margin:10px 0 4px;}
+  .done-sub{text-align:center; color:var(--muted); margin-bottom:20px;}
+  .center{text-align:center;}
+  .home-deco{display:flex; justify-content:center; gap:10px; margin:18px 0;}
+  .home-deco .d{width:78px;height:78px;border-radius:16px;overflow:hidden;background:#fff;box-shadow:var(--shadow);}
+  .home-deco .d img{width:100%;height:100%;object-fit:contain;}
+</style>
+</head>
+<body>
+
+<button class="gear" id="gearBtn" title="设置">&#9881;</button>
+
+<!-- 设置面板 -->
+<div class="panel" id="settingsPanel">
+  <div class="box">
+    <h3>设置</h3>
+    <div class="row">
+      <label>音量</label>
+      <input type="range" id="setVol" min="0" max="1" step="0.05" value="0.9">
+    </div>
+    <div class="row">
+      <label>语速</label>
+      <input type="range" id="setRate" min="0.6" max="1.2" step="0.05" value="0.9">
+    </div>
+    <div class="row">
+      <label>显示文字</label>
+      <div class="switch on" id="setText"></div>
+    </div>
+    <div class="row">
+      <label>做对后自动下一题</label>
+      <div class="switch" id="setAuto"></div>
+    </div>
+    <div class="row">
+      <label>候选图片数量</label>
+      <div class="seg" id="setPool">
+        <button data-v="4">4 张</button>
+        <button data-v="5" class="sel">5 张</button>
+        <button data-v="6">6 张</button>
+      </div>
+    </div>
+    <button class="btn big" id="closeSet" style="margin-top:18px;">完成</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 首页 -->
+  <div class="screen active" id="home">
+    <h1>因为……所以……</h1>
+    <div class="sub">Because… so… · 语言理解练习</div>
+    <div class="card">
+      <div class="center" style="font-size:17px; line-height:1.7;">
+        听一听句子，<br>把正确的原因和结果图片放进去，<br>然后跟着读一读！
+      </div>
+      <div class="home-deco">
+        <div class="d"><img src="causal-images/c01.webp" alt=""></div>
+        <div class="d"><img src="causal-images/r01.webp" alt=""></div>
+        <div class="d"><img src="causal-images/c03.webp" alt=""></div>
+      </div>
+      <button class="btn big" id="startBtn">开始练习</button>
+    </div>
+    <p class="center" style="color:var(--muted); font-size:13px;">共 <span id="qCount">10</span> 题 · 需要声音，请打开设备音量 &#128266;</p>
+  </div>
+
+  <!-- 练习页 -->
+  <div class="screen" id="practice">
+    <div class="topbar">
+      <button class="btn ghost" id="exitBtn" style="padding:10px 14px; font-size:15px; box-shadow:0 3px 0 #DFD3BF;">&#8592; 返回</button>
+      <div class="progress" id="prog">第 1 / 10 题</div>
+      <div class="stars" id="stars">&#11088; 0</div>
+    </div>
+
+    <div class="card">
+      <div class="sentence">
+        <span>因为</span>
+        <div class="slot" id="slotA" data-slot="A"><span class="tag">原因</span></div>
+        <span class="conn">所以</span>
+        <div class="slot" id="slotB" data-slot="B"><span class="tag">结果</span></div>
+      </div>
+
+      <div class="listen">
+        <button class="speaker" id="speakerBtn" title="听句子">&#128266;</button>
+      </div>
+      <div class="hint" id="hint">点击喇叭听句子，再把图片放进去吧</div>
+
+      <div class="grid" id="grid"></div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="readbox" id="readbox">
+        <div class="line" id="readLine"></div>
+        <div class="readbtns">
+          <button class="btn blue" id="replayBtn" style="flex:1;">&#128266; 再听一次</button>
+          <button class="btn green" id="nextBtn" style="flex:1;">我读好了 &#10003;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结束页 -->
+  <div class="screen" id="done">
+    <div class="card">
+      <div class="done-emoji">&#127881;</div>
+      <div class="done-score" id="doneScore">你完成啦！</div>
+      <div class="done-sub" id="doneSub"></div>
+      <button class="btn big green" id="againBtn">再玩一次</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- 数据 ---------- */
+const CAUSES = [
+  {id:'c01',f:'c01.webp',t:'下雨了'},
+  {id:'c02',f:'c02.webp',t:'太阳大'},
+  {id:'c03',f:'c03.webp',t:'天黑'},
+  {id:'c04',f:'c04.webp',t:'冷'},
+  {id:'c05',f:'c05.webp',t:'热'},
+  {id:'c06',f:'c06.webp',t:'闹钟响'},
+  {id:'c07',f:'c07.webp',t:'要出门'},
+  {id:'c08',f:'c08.webp',t:'要睡觉'},
+  {id:'c09',f:'c09.webp',t:'饿'},
+  {id:'c10',f:'c10.webp',t:'渴'},
+  {id:'c11',f:'c11.webp',t:'困'},
+  {id:'c12',f:'c12.webp',t:'生病'},
+  {id:'c13',f:'c13.webp',t:'手脏'},
+  {id:'c14',f:'c14.webp',t:'牙痛'},
+  {id:'c15',f:'c15.webp',t:'手破'},
+  {id:'c16',f:'c16.webp',t:'打喷嚏'},
+  {id:'c17',f:'c17.webp',t:'衣服脏'},
+  {id:'c18',f:'c18.webp',t:'地板脏'},
+  {id:'c19',f:'c19.webp',t:'桌子脏'},
+  {id:'c20',f:'c20.webp',t:'铅笔断'},
+  {id:'c21',f:'c21.webp',t:'鞋带松'},
+  {id:'c22',f:'c22.webp',t:'手机没电'},
+  {id:'c23',f:'c23.webp',t:'电视坏'},
+  {id:'c24',f:'c24.webp',t:'过生日'},
+];
+const RESULTS = [
+  {id:'r01',f:'r01.webp',t:'打伞'},
+  {id:'r02',f:'r02.webp',t:'戴帽子'},
+  {id:'r03',f:'r03.webp',t:'开灯'},
+  {id:'r04',f:'r04.webp',t:'穿外套'},
+  {id:'r05',f:'r05.webp',t:'开风扇'},
+  {id:'r06',f:'r06.webp',t:'起床'},
+  {id:'r07',f:'r07.webp',t:'穿鞋'},
+  {id:'r08',f:'r08.webp',t:'关灯'},
+  {id:'r09',f:'r09.webp',t:'吃饭'},
+  {id:'r10',f:'r10.webp',t:'喝水'},
+  {id:'r11',f:'r11.webp',t:'睡觉'},
+  {id:'r12',f:'r12.webp',t:'吃药'},
+  {id:'r13',f:'r13.webp',t:'洗手'},
+  {id:'r14',f:'r14.webp',t:'看牙医'},
+  {id:'r15',f:'r15.webp',t:'贴创可贴'},
+  {id:'r16',f:'r16.webp',t:'拿纸巾'},
+  {id:'r17',f:'r17.webp',t:'洗衣服'},
+  {id:'r18',f:'r18.webp',t:'扫地'},
+  {id:'r19',f:'r19.webp',t:'擦桌子'},
+  {id:'r20',f:'r20.webp',t:'削铅笔'},
+  {id:'r21',f:'r21.webp',t:'系鞋带'},
+  {id:'r22',f:'r22.webp',t:'充电'},
+  {id:'r23',f:'r23.webp',t:'叫人修'},
+  {id:'r24',f:'r24.webp',t:'吃蛋糕'},
+];
+
+// 合并所有图片（原因+结果），用于候选池
+const ALL_IMGS = [...CAUSES, ...RESULTS];
+const BYID = {};
+ALL_IMGS.forEach(a=>BYID[a.id]=a);
+
+// 题目：每题是一组 [cause_id, result_id]
+const QUESTIONS = CAUSES.map((_, i)=>[`c${String(i+1).padStart(2,'0')}`, `r${String(i+1).padStart(2,'0')}`]);
+const TRIALS = 10;
+
+/* ---------- 状态 ---------- */
+const settings = {vol:0.9, rate:0.9, showText:true, auto:false, pool:5};
+let order = [];
+let qi = 0;
+let score = 0;
+let cur = null;       // 当前题 {c, r, cands}
+let filled = {A:null, B:null};
+let checked = false;
+let autoTimer = null;
+
+/* ---------- 工具 ---------- */
+const $ = s=>document.querySelector(s);
+function shuffle(a){
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN'; u.rate=settings.rate; u.volume=settings.vol;
+    const vs=window.speechSynthesis.getVoices();
+    const zh=vs.find(v=>/zh|Chinese|中文/i.test(v.lang+v.name));
+    if(zh) u.voice=zh;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+let actx;
+function beep(freq,dur=0.15,type='sine',vol=0.25){
+  try{
+    actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.type=type;o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
+    const v=settings.vol*vol;
+    g.gain.setValueAtTime(0,actx.currentTime);
+    g.gain.linearRampToValueAtTime(v,actx.currentTime+0.02);
+    g.gain.linearRampToValueAtTime(0,actx.currentTime+dur);
+    o.start();o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+function sfxOk(){ beep(660,0.12); setTimeout(()=>beep(880,0.18),110); }
+function sfxNo(){ beep(220,0.25,'square',0.2); }
+function sfxWin(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,0.18),i*120)); }
+
+/* ---------- 出题 ---------- */
+function buildQuestion(pair){
+  const [cId,rId]=pair;
+  // 干扰项：从所有图片中排除当前题的两个答案
+  const others=ALL_IMGS.filter(a=>a.id!==cId&&a.id!==rId).map(a=>a.id);
+  const distract=shuffle(others).slice(0,Math.max(0,settings.pool-2));
+  const cands=shuffle([cId,rId,...distract]);
+  return {c:cId,r:rId,cands};
+}
+
+function startGame(){
+  order=shuffle(QUESTIONS.map((_,i)=>i)).slice(0,TRIALS);
+  qi=0; score=0;
+  $('#qCount').textContent=order.length;
+  show('practice');
+  loadQuestion();
+}
+
+function loadQuestion(){
+  if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
+  cur=buildQuestion(QUESTIONS[order[qi]]);
+  filled={A:null,B:null}; checked=false;
+  $('#prog').textContent=`第 ${qi+1} / ${order.length} 题`;
+  $('#stars').textContent=`\u2605 ${score}`;
+  $('#feedback').textContent='';$('#feedback').className='feedback';
+  $('#hint').textContent='点击喇叭听句子，再把图片放进去吧';
+  $('#readbox').classList.remove('show');
+
+  ['A','B'].forEach(k=>{
+    const el=$('#slot'+k);
+    el.className='slot';
+    el.innerHTML=`<span class="tag">${k==='A'?'\u539F\u56E0':'\u7ED3\u679C'}<\/span>`;
+  });
+
+  renderGrid();
+  // 自动播放句子（先停顿 2 秒，等待图片加载）
+  setTimeout(()=>speak(sentenceText()),2000);
+}
+
+function sentenceText(){
+  return `\u56E0\u4E3A${BYID[cur.c].t}\uFF0C\u6240\u4EE5${BYID[cur.r].t}`;
+}
+
+function renderGrid(){
+  const g=$('#grid'); g.innerHTML='';
+  cur.cands.forEach(id=>{
+    const a=BYID[id];
+    const d=document.createElement('div');
+    d.className='choice'; d.dataset.id=id;
+    d.innerHTML=`<img src="causal-images/${a.f}" alt="${a.t}"><div class="lab">${a.t}<\/div>`;
+    d.addEventListener('click',()=>pick(id,d));
+    g.appendChild(d);
+  });
+}
+
+function pick(id,el){
+  if(checked) return;
+  if(filled.A && filled.B) return;
+  if(filled.A===id || filled.B===id) return;
+  const slotKey=filled.A?'B':'A';
+  filled[slotKey]=id;
+  el.classList.add('used','pick');
+  const sEl=$('#slot'+slotKey);
+  sEl.className='slot filled';
+  sEl.innerHTML=`<span class="tag">${slotKey==='A'?'\u539F\u56E0':'\u7ED3\u679C'}<\/span><img src="causal-images/${BYID[id].f}" alt="">`;
+  if(filled.A && filled.B) checkAnswer();
+}
+
+function clearSlot(k){
+  const id=filled[k];
+  if(!id) return;
+  filled[k]=null;
+  const sEl=$('#slot'+k);
+  sEl.className='slot';
+  sEl.innerHTML=`<span class="tag">${k==='A'?'\u539F\u56E0':'\u7ED3\u679C'}<\/span>`;
+  const ch=document.querySelector(`.choice[data-id="${id}"]`);
+  if(ch) ch.classList.remove('used');
+}
+
+function checkAnswer(){
+  const ok=filled.A===cur.c && filled.B===cur.r;
+  checked=true;
+  const fb=$('#feedback');
+  if(ok){
+    sfxOk();
+    $('#slotA').classList.add('correct');$('#slotB').classList.add('correct');
+    fb.textContent='\u592A\u68D2\u4E86\uFF01\u2714';fb.className='feedback ok';
+    score++; $('#stars').textContent=`\u2605 ${score}`;
+    if(settings.auto){
+      autoTimer=setTimeout(nextQuestion,1500);
+    }else{
+      $('#hint').textContent='\u70B9\u4E0B\u9762\u7684\u53E5\u5B50\uFF0C\u7740\u7740\u8BFB\u4E00\u8BFB\u5427';
+      showRead();
+    }
+  }else{
+    sfxNo();
+    $('#slotA').classList.add('wrong');$('#slotB').classList.add('wrong');
+    fb.textContent='\u518D\u60F3\u4E00\u60F3\u54E6';fb.className='feedback no';
+    $('#hint').textContent='\u539F\u56E0\u6216\u7ED3\u679C\u4E0D\u5BF9\uFF0C\u70B9\u56FE\u7247\u53EF\u4EE5\u62FF\u4E0B\u6765\u91CD\u653E';
+    setTimeout(()=>{
+      clearSlot('A');clearSlot('B');checked=false;
+      fb.textContent='';fb.className='feedback';
+    },1100);
+  }
+}
+
+function showRead(){
+  const rb=$('#readbox');rb.classList.add('show');
+  const line=$('#readLine');
+  const showT=settings.showText;
+  line.innerHTML=
+    `<span>\u56E0\u4E3A</span>`+
+    `<span class="mini"><img src="causal-images/${BYID[cur.c].f}"><\/span>`+
+    (showT?`<span>${BYID[cur.c].t}<\/span>`:'')+
+    `<span class="conn">\u6240\u4EE5</span>`+
+    `<span class="mini"><img src="causal-images/${BYID[cur.r].f}"><\/span>`+
+    (showT?`<span>${BYID[cur.r].t}<\/span>`:'');
+  speak(sentenceText());
+}
+
+function nextQuestion(){
+  qi++;
+  if(qi>=order.length){finish();return;}
+  loadQuestion();
+}
+
+function finish(){
+  show('done');
+  const total=order.length;
+  $('#doneScore').textContent=`\u4F60\u5F97\u5230 \u2605 ${score} / ${total}\uFF01`;
+  $('#doneSub').textContent=score===total?
+    '\u5168\u90E8\u6B63\u786E\uFF0C\u771F\u538E\u5BB3\uFF01':
+    '\u7EE7\u7EED\u52A0\u6CB9\uFF0C\u4F60\u4F1A\u66F4\u68D2\uFF01';
+  sfxWin();
+  try{if('speechSynthesis'in window)window.speechSynthesis.cancel();}catch(e){}
+}
+
+/* ---------- 屏幕切换 ---------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('#'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ---------- 事件 ---------- */
+$('#startBtn').addEventListener('click',startGame);
+$('#againBtn').addEventListener('click',startGame);
+$('#exitBtn').addEventListener('click',()=>{
+  if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
+  try{if('speechSynthesis'in window)window.speechSynthesis.cancel();}catch(e){}
+  show('home');
+});
+$('#speakerBtn').addEventListener('click',()=>speak(sentenceText()));
+$('#replayBtn').addEventListener('click',()=>speak(sentenceText()));
+$('#nextBtn').addEventListener('click',nextQuestion);
+$('#slotA').addEventListener('click',()=>{
+  if(checked)return;clearSlot('A');
+});
+$('#slotB').addEventListener('click',()=>{
+  if(checked)return;clearSlot('B');
+});
+
+// 设置面板
+$('#gearBtn').addEventListener('click',()=>$('#settingsPanel').classList.add('show'));
+$('#closeSet').addEventListener('click',()=>{
+  settings.vol=parseFloat($('#setVol').value);
+  settings.rate=parseFloat($('#setRate').value);
+  $('#settingsPanel').classList.remove('show');
+  speak('\u56E0\u4E3A\u5929\u9ED1\uFF0C\u6240\u4EE5\u5F00\u706F');
+});
+$('#setVol').addEventListener('input',e=>settings.vol=parseFloat(e.target.value));
+$('#setRate').addEventListener('input',e=>settings.rate=parseFloat(e.target.value));
+function bindSwitch(id,key){
+  const el=$('#'+id);
+  el.addEventListener('click',()=>{settings[key]=!settings[key];el.classList.toggle('on',settings[key]);});
+}
+bindSwitch('setText','showText');
+bindSwitch('setAuto','auto');
+
+$('#setPool').querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    $('#setPool').querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    settings.pool=parseInt(b.dataset.v);
+  });
+});
+
+// 预载语音列表
+if('speechSynthesis'in window){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+}
+</script>
+</body>
+</html>
