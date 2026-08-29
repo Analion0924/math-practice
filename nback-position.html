@@ -590,7 +590,8 @@ function bindSeg(id,key){
     b.addEventListener('click',()=>{
       seg.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
       b.classList.add('sel');
-      settings[key]=parseFloat(b.dataset.v);
+      const raw=b.dataset.v;
+      settings[key]= isNaN(parseFloat(raw)) ? raw : parseFloat(raw);
     });
   });
 }
