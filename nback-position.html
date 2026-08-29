@@ -84,6 +84,17 @@
   .cell.correct{background:var(--green);}
   .cell.wrong{background:var(--red);}
 
+  .stim{display:none; width:min(64vw,240px); height:min(64vw,240px); margin:14px auto; border-radius:20px;
+        background:#F0E6DA; align-items:center; justify-content:center; font-size:120px; font-weight:800; color:#fff;}
+  .stim.on{background:var(--primary);}
+  .stim.correct{background:var(--green);}
+  .stim.wrong{background:var(--red);}
+  .mini .mnum{font-size:20px; font-weight:800; color:var(--ink); display:flex; align-items:center; justify-content:center;}
+  .mini.cur .mnum{color:var(--primary);}
+  .mini.tgt .mnum{color:var(--blue);}
+  .mini.numcard{display:flex; align-items:center; justify-content:center; width:62px; height:62px; padding:0; background:#FBF4EC;}
+  .mini.numcard .mnum{font-size:30px;}
+
   .prompt{text-align:center; font-size:20px; font-weight:800; min-height:28px; margin:10px 0 4px; color:var(--ink);}
   .feedback{text-align:center; font-size:22px; font-weight:800; min-height:28px; margin:4px 0 8px;}
   .feedback.ok{color:var(--green);}
@@ -115,6 +126,13 @@
 <div class="panel" id="settingsPanel">
   <div class="box">
     <h3>设置</h3>
+    <div class="row">
+      <label>练习形式</label>
+      <div class="seg" id="setMode">
+        <button data-v="position" class="sel">位置</button>
+        <button data-v="number">数字</button>
+      </div>
+    </div>
     <div class="row">
       <label>难度 N（记住第几个）</label>
       <div class="seg" id="setN">
@@ -158,18 +176,12 @@
 
   <!-- 首页 -->
   <div class="screen active" id="home">
-    <h1>位置记忆</h1>
-    <div class="sub">n-back 练习 · 记住亮起的位置</div>
+    <h1 id="homeTitle">位置记忆</h1>
+    <div class="sub" id="homeSub">n-back 练习 · 记住亮起的位置</div>
     <div class="card">
       <div class="bigchar">n-back</div>
-      <div class="center" style="font-size:17px; line-height:1.85;">
-        每次有一个格子<b>亮起来</b>，记住它在哪里！<br>
-        当新格子亮起时，想一想：<br>
-        这个位置，和<b>前面第 N 个</b>亮起的位置，<br>
-        是<b>同一个</b>吗？<br>
-        一样就点<b>「一样」</b>，不一样点<b>「不一样」</b>。
-      </div>
-      <div class="hint">前 N 个位置先用来记住，不用作答～</div>
+      <div class="center" id="homeDesc" style="font-size:17px; line-height:1.85;"></div>
+      <div class="hint">前 N 个先用来记住，不用作答～</div>
       <button class="btn big" id="startBtn">开始练习</button>
       <button class="btn ghost big" id="teachBtn" style="margin-top:12px; font-size:18px;">先学一学（2-back 看图理解）</button>
     </div>
@@ -185,6 +197,7 @@
     </div>
     <div class="card">
       <div class="grid" id="grid"></div>
+      <div class="stim" id="stim"></div>
       <div class="prompt" id="prompt"></div>
       <div class="feedback" id="feedback"></div>
       <div class="controls">
@@ -204,7 +217,7 @@
     </div>
     <div class="card">
       <div class="hint" style="font-size:15px; color:var(--ink);">
-        每次亮起的格子都会留在这里排成一排。看<b>黄框＝现在</b>，和<b style="color:var(--blue);">蓝圈＝前面第 2 个</b>，是不是在同一个位置？
+        每次出现的刺激都会留在这里排成一排。看<b>黄框＝现在</b>，和<b style="color:var(--blue);">蓝圈＝前面第 2 个</b>，是不是相同？
       </div>
       <div class="history" id="thistory"></div>
       <div class="prompt" id="tprompt"></div>
@@ -234,7 +247,7 @@
 
 <script>
 /* ---------- 设置 ---------- */
-const settings = { n: 2, trials: 20, matchRatio: 0.30, sound: true, vol: 0.6, showText: true };
+const settings = { mode: 'position', n: 2, trials: 20, matchRatio: 0.30, sound: true, vol: 0.6, showText: true };
 
 /* ---------- 状态 ---------- */
 let seq=[], n=2, total=20;
@@ -270,10 +283,11 @@ function beep(freq){
   }catch(e){}
 }
 
-/* ---------- 网格 ---------- */
+/* ---------- 网格 / 数字 ---------- */
 const grid = $('#grid');
+const stim = $('#stim');
 const cells=[];
-for(let i=0;i<9;i++){
+for(let i=0;i< 9;i++){
   const c=document.createElement('div');
   c.className='cell';
   grid.appendChild(c);
@@ -281,11 +295,40 @@ for(let i=0;i<9;i++){
 }
 function setCell(i,cls){ cells[i].className='cell'+(cls?(' '+cls):''); }
 function clearCell(i){ cells[i].className='cell'; }
+function showStim(v,cls){ stim.textContent=(v+1); stim.className='stim'+(cls?(' '+cls):''); }
+function clearStim(){ stim.className='stim'; stim.textContent=''; }
+
+function applyModeUI(){
+  if(settings.mode==='number'){ grid.style.display='none'; stim.style.display='flex'; }
+  else { grid.style.display=''; stim.style.display='none'; }
+}
+function updateHome(){
+  if(settings.mode==='number'){
+    $('#homeTitle').textContent='数字记忆';
+    $('#homeSub').textContent='n-back 练习 · 记住出现的数字';
+    $('#homeDesc').innerHTML =
+      '每次出现一个<b>数字</b>，记住它是几！<br>'+
+      '当新数字出现时，想一想：<br>'+
+      '这个数字，和<b>前面第 N 个</b>出现的数字，<br>'+
+      '是<b>同一个</b>吗？<br>'+
+      '一样就点<b>「一样」</b>，不一样点<b>「不一样」</b>。';
+  } else {
+    $('#homeTitle').textContent='位置记忆';
+    $('#homeSub').textContent='n-back 练习 · 记住亮起的位置';
+    $('#homeDesc').innerHTML =
+      '每次有一个格子<b>亮起来</b>，记住它在哪里！<br>'+
+      '当新格子亮起时，想一想：<br>'+
+      '这个位置，和<b>前面第 N 个</b>亮起的位置，<br>'+
+      '是<b>同一个</b>吗？<br>'+
+      '一样就点<b>「一样」</b>，不一样点<b>「不一样」</b>。';
+  }
+}
 
 /* ---------- 屏幕切换 ---------- */
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $('#'+id).classList.add('active');
+  if(id==='home') updateHome();
   window.scrollTo(0,0);
 }
 
@@ -309,9 +352,11 @@ function startGame(){
   $('#nBadge').textContent = 'N = '+n;
   $('#feedback').textContent=''; $('#feedback').className='feedback';
   cells.forEach(c=>c.className='cell');
+  clearStim();
   enableButtons(false);
   clearTimers();
   try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  applyModeUI();
   show('practice');
   runTrial();
 }
@@ -323,11 +368,11 @@ function runTrial(){
   const isWarm = idx<n;
   $('#prompt').textContent = '';
     if(isWarm){
-    if(settings.showText) $('#prompt').textContent='记住这个位置';
+    if(settings.showText) $('#prompt').textContent = settings.mode==='number' ? '记住这个数字' : '记住这个位置';
   }
-  setCell(pos,'on');
+  if(settings.mode==='number'){ showStim(pos); } else { setCell(pos,'on'); }
   timers.push(setTimeout(()=>{
-    clearCell(pos);
+    if(settings.mode==='number'){ clearStim(); } else { clearCell(pos); }
     if(isWarm){
       timers.push(setTimeout(()=>{ idx++; runTrial(); }, ISI));
     } else {
@@ -338,14 +383,16 @@ function runTrial(){
 }
 
 function showQuestion(){
-  if(settings.showText) $('#prompt').textContent = `这个位置和前面第 ${n} 个一样吗？`;
+  if(settings.showText) $('#prompt').textContent = settings.mode==='number'
+    ? `这个数字和前面第 ${n} 个一样吗？`
+    : `这个位置和前面第 ${n} 个一样吗？`;
   waiting=true; trialStart=performance.now();
   enableButtons(true);
   updateProgress(false);
 }
 
 function updateProgress(isWarm){
-  if(isWarm){ $('#prog').textContent = `记住第 ${idx+1} / ${n} 个位置`; }
+  if(isWarm){ $('#prog').textContent = `记住第 ${idx+1} / ${n} 个`; }
   else { $('#prog').textContent = `第 ${idx-n+1} / ${total-n} 题`; }
 }
 
@@ -358,7 +405,8 @@ function respond(userSaysMatch){
   answered++; if(ok) correctCount++;
   rtSum += (performance.now()-trialStart);
 
-  setCell(seq[idx], ok?'correct':'wrong');
+  if(settings.mode==='number'){ showStim(seq[idx], ok?'correct':'wrong'); }
+  else { setCell(seq[idx], ok?'correct':'wrong'); }
   const fb=$('#feedback');
   fb.textContent = ok ? '答对啦！' : '再想想～';
   fb.className = 'feedback '+(ok?'ok':'no');
@@ -366,7 +414,7 @@ function respond(userSaysMatch){
 
   timers.push(setTimeout(()=>{
     fb.textContent=''; fb.className='feedback';
-    clearCell(seq[idx]);
+    if(settings.mode==='number'){ clearStim(); } else { clearCell(seq[idx]); }
     idx++; runTrial();
   }, FB));
 }
@@ -404,7 +452,9 @@ function teachStart(){
   $('#tfeedback').textContent=''; $('#tfeedback').className='feedback';
   $('#tsame').disabled=true; $('#tdiff').disabled=true;
   clearTimers();
+  clearStim();
   try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  applyModeUI();
   show('teach');
   teachTrial();
 }
@@ -417,11 +467,20 @@ function renderHistory(){
     let cls='mini';
     if(step===cur) cls+=' cur';
     if(cur-2>=0 && step===cur-2) cls+=' tgt';
-    m.className=cls;
-    for(let i=0;i<9;i++){
-      const c=document.createElement('div');
-      c.className='mc'+(i===pos?' on':'');
-      m.appendChild(c);
+    if(settings.mode==='number'){
+      cls+=' numcard';
+      m.className=cls;
+      const num=document.createElement('div');
+      num.className='mnum';
+      num.textContent=(pos+1);
+      m.appendChild(num);
+    } else {
+      m.className=  cls;
+      for(let i=0;i<9;i++){
+        const c=document.createElement('div');
+        c.className='mc'+(i===pos?' on':'');
+        m.appendChild(c);
+      }
     }
     const lab=document.createElement('div');
     lab.className='minilab';
@@ -440,7 +499,7 @@ function teachTrial(){
   renderHistory();
   $('#tprompt').textContent='';
   if(isWarm){
-    if(settings.showText) $('#tprompt').textContent = `记住这个位置（第 ${cur+1} 个）`;
+    if(settings.showText) $('#tprompt').textContent = settings.mode==='number' ? `记住这个数字（第 ${cur+1} 个）` : `记住这个位置（第 ${cur+1} 个）`;
   }
   timers.push(setTimeout(()=>{
     if(isWarm){
@@ -449,12 +508,14 @@ function teachTrial(){
       timers.push(setTimeout(()=>{ teachQuestion(); }, ISI));
     }
   }, STIM));
-  $('#tprog').textContent = isWarm ? `记住第 ${cur+1} / 2 个位置`
+  $('#tprog').textContent = isWarm ? `记住第 ${cur+1} / 2 个`
                                   : `第 ${cur-1} / ${tSeq.length-2} 题`;
 }
 
 function teachQuestion(){
-  if(settings.showText) $('#tprompt').textContent = '现在（黄框）和前面第 2 个（蓝圈）一样吗？';
+  if(settings.showText) $('#tprompt').textContent = settings.mode==='number'
+    ? '现在（黄框）和前面第 2 个（蓝圈）的数字一样吗？'
+    : '现在（黄框）和前面第 2 个（蓝圈）的位置一样吗？';
   tWaiting=true; tStart=performance.now();
   $('#tsame').disabled=false; $('#tdiff').disabled=false;
 }
@@ -541,6 +602,8 @@ function bindSeg(id,key){
 bindSeg('setN','n');
 bindSeg('setTrials','trials');
 bindSeg('setMatch','matchRatio');
+bindSeg('setMode','mode');
+updateHome();
 
 // 预载语音列表
 if('speechSynthesis' in window){
