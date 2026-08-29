@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>位置记忆 · n-back 练习</title>
+<title>n-back 练习</title>
 <style>
   :root{
     --bg:#FFF0E6; --card:#FFFFFF; --ink:#3A3530; --muted:#9C948A;
@@ -176,8 +176,7 @@
 
   <!-- 首页 -->
   <div class="screen active" id="home">
-    <h1 id="homeTitle">位置记忆</h1>
-    <div class="sub" id="homeSub">n-back 练习 · 记住亮起的位置</div>
+    <h1 id="homeTitle">n-back</h1>
     <div class="card">
       <div class="bigchar">n-back</div>
       <div class="center" id="homeDesc" style="font-size:17px; line-height:1.85;"></div>
@@ -304,8 +303,6 @@ function applyModeUI(){
 }
 function updateHome(){
   if(settings.mode==='number'){
-    $('#homeTitle').textContent='数字记忆';
-    $('#homeSub').textContent='n-back 练习 · 记住出现的数字';
     $('#homeDesc').innerHTML =
       '每次出现一个<b>数字</b>，记住它是几！<br>'+
       '当新数字出现时，想一想：<br>'+
@@ -313,8 +310,6 @@ function updateHome(){
       '是<b>同一个</b>吗？<br>'+
       '一样就点<b>「一样」</b>，不一样点<b>「不一样」</b>。';
   } else {
-    $('#homeTitle').textContent='位置记忆';
-    $('#homeSub').textContent='n-back 练习 · 记住亮起的位置';
     $('#homeDesc').innerHTML =
       '每次有一个格子<b>亮起来</b>，记住它在哪里！<br>'+
       '当新格子亮起时，想一想：<br>'+
