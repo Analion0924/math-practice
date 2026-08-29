@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>位置记忆 · n-back 练习</title>
+<style>
+  :root{
+    --bg:#FFF0E6; --card:#FFFFFF; --ink:#3A3530; --muted:#9C948A;
+    --primary:#FF6B4A; --primary-d:#E04F30; --blue:#5BA3D6; --green:#4ECB71;
+    --yellow:#FFD05C; --line:#F0E2D0; --red:#E26A6A;
+    --radius:20px; --shadow:0 8px 24px rgba(180,130,100,.18);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+    background:var(--bg); color:var(--ink);
+    display:flex; justify-content:center; align-items:flex-start;
+    min-height:100%; overflow-x:hidden;
+  }
+  .wrap{width:100%; max-width:760px; padding:18px 16px 40px; position:relative;}
+  .screen{display:none;}
+  .screen.active{display:block; animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  h1{font-size:30px; font-weight:800; text-align:center; margin:8px 0 2px;}
+  .sub{text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px; letter-spacing:.5px;}
+  .bigchar{font-size:54px; font-weight:800; color:var(--primary); text-align:center; margin:4px 0 2px;}
+
+  .card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:22px; margin-bottom:18px;
+  }
+  .btn{
+    border:none; border-radius:16px; font-size:20px; font-weight:700;
+    padding:16px 22px; cursor:pointer; transition:transform .12s, box-shadow .12s;
+    background:var(--primary); color:#fff; box-shadow:0 5px 0 var(--primary-d);
+  }
+  .btn:active{transform:translateY(3px); box-shadow:0 2px 0 var(--primary-d);}
+  .btn.blue{background:var(--blue); box-shadow:0 5px 0 #3E82AD;}
+  .btn.green{background:var(--green); box-shadow:0 5px 0 #38A85A;}
+  .btn.ghost{background:#F3ECE0; color:var(--ink); box-shadow:0 5px 0 #DFD3BF;}
+  .btn.big{font-size:24px; padding:20px; width:100%;}
+  .btn.sm{font-size:16px; padding:12px 16px; box-shadow:0 4px 0 var(--primary-d);}
+  .btn:disabled{opacity:.5; box-shadow:none; cursor:default;}
+
+  .gear{
+    position:fixed; top:16px; right:16px; height:46px; padding:0 16px; border-radius:999px;
+    background:var(--card); box-shadow:var(--shadow); border:none; cursor:pointer;
+    font-size:16px; font-weight:700; color:var(--muted); z-index:30;
+  }
+  .panel{
+    position:fixed; inset:0; background:rgba(60,50,40,.35); z-index:40;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .panel.show{display:flex;}
+  .panel .box{
+    background:var(--card); width:100%; max-width:760px; border-radius:24px 24px 0 0;
+    padding:24px 22px calc(24px + env(safe-area-inset-bottom)); box-shadow:var(--shadow);
+  }
+  .panel h3{margin:0 0 16px; font-size:20px;}
+  .row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none;}
+  .row label{font-size:16px; font-weight:600;}
+  .row input[type=range]{width:160px;}
+  .switch{position:relative; width:54px; height:30px; background:#D9CFBE; border-radius:30px; cursor:pointer; transition:background .2s;}
+  .switch.on{background:var(--green);}
+  .switch::after{content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; background:#fff; border-radius:50%; transition:left .2s;}
+  .switch.on::after{left:27px;}
+  .seg{display:flex; gap:8px;}
+  .seg button{border:none; background:#F3ECE0; border-radius:12px; padding:8px 14px; font-size:15px; font-weight:700; cursor:pointer; color:var(--muted);}
+  .seg button.sel{background:var(--primary); color:#fff;}
+
+  .center{text-align:center;}
+  .hint{text-align:center; color:var(--muted); font-size:14px; margin:8px 0;}
+
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:8px;}
+  .progress{font-size:15px; font-weight:700; color:var(--muted);}
+  .nbadge{font-size:14px; font-weight:700; color:#fff; background:var(--blue); border-radius:999px; padding:4px 12px;}
+
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; width:min(78vw,300px); margin:14px auto;}
+  .cell{aspect-ratio:1; background:#F0E6DA; border-radius:16px; transition:background .12s, transform .12s;}
+  .cell.on{background:var(--primary); transform:scale(1.04);}
+  .cell.correct{background:var(--green);}
+  .cell.wrong{background:var(--red);}
+
+  .prompt{text-align:center; font-size:20px; font-weight:800; min-height:28px; margin:10px 0 4px; color:var(--ink);}
+  .feedback{text-align:center; font-size:22px; font-weight:800; min-height:28px; margin:4px 0 8px;}
+  .feedback.ok{color:var(--green);}
+  .feedback.no{color:var(--red);}
+  .controls{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:10px;}
+  .controls .btn{flex:1; min-width:140px; max-width:220px;}
+
+  .history{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-start; margin:14px 0 4px;}
+  .mini{display:grid; grid-template-columns:repeat(3,20px); grid-template-rows:repeat(3,20px); gap:3px; padding:6px; border-radius:12px; border:2px solid transparent; background:#FBF4EC;}
+  .mini.cur{border-color:var(--primary); box-shadow:0 0 0 2px var(--primary);}
+  .mini.tgt{border-color:var(--blue); box-shadow:0 0 0 3px var(--blue);}
+  .mini .mc{width:20px; height:20px; border-radius:5px; background:#E7DCCB;}
+  .mini .mc.on{background:var(--primary);}
+  .minilab{font-size:11px; text-align:center; color:var(--muted); margin-top:4px;}
+  .mini.cur .minilab{color:var(--primary); font-weight:700;}
+  .mini.tgt .minilab{color:var(--blue); font-weight:700;}
+
+  .done-emoji{font-size:60px; text-align:center; font-weight:800; color:var(--primary);}
+  .done-score{text-align:center; font-size:22px; font-weight:800; margin:10px 0 4px;}
+  .stars{text-align:center; font-size:40px; color:var(--yellow); letter-spacing:6px; margin:6px 0;}
+  .done-sub{text-align:center; color:var(--muted); margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<button class="gear" id="gearBtn">设置</button>
+
+<!-- 设置面板 -->
+<div class="panel" id="settingsPanel">
+  <div class="box">
+    <h3>设置</h3>
+    <div class="row">
+      <label>难度 N（记住第几个）</label>
+      <div class="seg" id="setN">
+        <button data-v="1">1-back</button>
+        <button data-v="2" class="sel">2-back</button>
+        <button data-v="3">3-back</button>
+      </div>
+    </div>
+    <div class="row">
+      <label>每轮题数</label>
+      <div class="seg" id="setTrials">
+        <button data-v="10">10 题</button>
+        <button data-v="20" class="sel">20 题</button>
+      </div>
+    </div>
+    <div class="row">
+      <label>目标比例</label>
+      <div class="seg" id="setMatch">
+        <button data-v="0.25">25%</button>
+        <button data-v="0.30" class="sel">30%</button>
+        <button data-v="0.33">33%</button>
+      </div>
+    </div>
+    <div class="row">
+      <label>音效（选择反馈）</label>
+      <div class="switch on" id="setSound"></div>
+    </div>
+    <div class="row">
+      <label>音量</label>
+      <input type="range" id="setVol" min="0" max="1" step="0.05" value="0.6">
+    </div>
+      <div class="row">
+      <label>显示文字</label>
+      <div class="switch on" id="setText"></div>
+    </div>
+    <button class="btn big" id="closeSet" style="margin-top:18px;">完成</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 首页 -->
+  <div class="screen active" id="home">
+    <h1>位置记忆</h1>
+    <div class="sub">n-back 练习 · 记住亮起的位置</div>
+    <div class="card">
+      <div class="bigchar">n-back</div>
+      <div class="center" style="font-size:17px; line-height:1.85;">
+        每次有一个格子<b>亮起来</b>，记住它在哪里！<br>
+        当新格子亮起时，想一想：<br>
+        这个位置，和<b>前面第 N 个</b>亮起的位置，<br>
+        是<b>同一个</b>吗？<br>
+        一样就点<b>「一样」</b>，不一样点<b>「不一样」</b>。
+      </div>
+      <div class="hint">前 N 个位置先用来记住，不用作答～</div>
+      <button class="btn big" id="startBtn">开始练习</button>
+      <button class="btn ghost big" id="teachBtn" style="margin-top:12px; font-size:18px;">先学一学（2-back 看图理解）</button>
+    </div>
+    <p class="center" style="color:var(--muted); font-size:13px;">需要声音，请打开设备音量</p>
+  </div>
+
+  <!-- 练习页 -->
+  <div class="screen" id="practice">
+    <div class="topbar">
+      <button class="btn ghost" id="exitBtn" style="padding:10px 14px; font-size:15px; box-shadow:0 3px 0 #DFD3BF;">返回</button>
+      <div class="progress" id="prog">准备中…</div>
+      <div class="nbadge" id="nBadge">N = 2</div>
+    </div>
+    <div class="card">
+      <div class="grid" id="grid"></div>
+      <div class="prompt" id="prompt"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="controls">
+        <button class="btn green" id="sameBtn" disabled>一样</button>
+        <button class="btn blue" id="diffBtn" disabled>不一样</button>
+      </div>
+      <div class="hint">键盘：F = 一样，J = 不一样</div>
+    </div>
+  </div>
+
+  <!-- 教学页：2-back，小图时间线全呈现 -->
+  <div class="screen" id="teach">
+    <div class="topbar">
+      <button class="btn ghost" id="teachExit" style="padding:10px 14px; font-size:15px; box-shadow:0 3px 0 #DFD3BF;">返回</button>
+      <div class="progress" id="tprog">学习中…</div>
+      <div class="nbadge">N = 2</div>
+    </div>
+    <div class="card">
+      <div class="hint" style="font-size:15px; color:var(--ink);">
+        每次亮起的格子都会留在这里排成一排。看<b>黄框＝现在</b>，和<b style="color:var(--blue);">蓝圈＝前面第 2 个</b>，是不是在同一个位置？
+      </div>
+      <div class="history" id="thistory"></div>
+      <div class="prompt" id="tprompt"></div>
+      <div class="feedback" id="tfeedback"></div>
+      <div class="controls">
+        <button class="btn green" id="tsame" disabled>一样</button>
+        <button class="btn blue" id="tdiff" disabled>不一样</button>
+      </div>
+      <div class="hint">键盘：F = 一样，J = 不一样</div>
+    </div>
+  </div>
+
+  <!-- 结束页 -->
+  <div class="screen" id="done">
+    <div class="card">
+      <div class="done-emoji">完成</div>
+      <div class="done-score" id="doneScore">你完成啦！</div>
+      <div class="stars" id="doneStars">★★★</div>
+      <div class="done-sub" id="doneSub">继续加油！</div>
+      <div class="done-sub" id="doneBest"></div>
+      <button class="btn big green" id="againBtn">再玩一次</button>
+      <button class="btn ghost big" id="homeBtn" style="margin-top:12px; font-size:18px;">回到首页</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- 设置 ---------- */
+const settings = { n: 2, trials: 20, matchRatio: 0.30, sound: true, vol: 0.6, showText: true };
+
+/* ---------- 状态 ---------- */
+let seq=[], n=2, total=20;
+let idx=0, correctCount=0, answered=0, rtSum=0;
+let waiting=false, trialStart=0;
+let timers=[];
+
+/* ---------- 常量（呈现节奏，毫秒） ---------- */
+const STIM=800;   // 格子亮起时长
+const ISI=900;    // 间隔
+const FB=750;     // 反馈停留
+
+/* ---------- 工具 ---------- */
+const $ = s=>document.querySelector(s);
+function clearTimers(){ timers.forEach(t=>clearTimeout(t)); timers=[]; }
+function rand9(){ return Math.floor(Math.random()*9); }
+
+
+let actx=null;
+function beep(freq){
+  if(!settings.sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type='sine'; o.frequency.value=freq;
+    o.connect(g); g.connect(actx.destination);
+    const v = settings.vol;
+    g.gain.setValueAtTime(0.0001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(v, actx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+0.18);
+    o.start(); o.stop(actx.currentTime+0.2);
+  }catch(e){}
+}
+
+/* ---------- 网格 ---------- */
+const grid = $('#grid');
+const cells=[];
+for(let i=0;i<9;i++){
+  const c=document.createElement('div');
+  c.className='cell';
+  grid.appendChild(c);
+  cells.push(c);
+}
+function setCell(i,cls){ cells[i].className='cell'+(cls?(' '+cls):''); }
+function clearCell(i){ cells[i].className='cell'; }
+
+/* ---------- 屏幕切换 ---------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('#'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ---------- 生成序列 ---------- */
+function genSequence(n, total){
+  const s=[];
+  let lastWasTarget=false;          // 目标不相邻：上一步若是匹配，这一步强制非匹配
+  for(let i=0;i<total;i++){
+    if(i<n){ s.push(rand9()); lastWasTarget=false; }
+    else if(!lastWasTarget && Math.random()<settings.matchRatio){ s.push(s[i-n]); lastWasTarget=true; } // 匹配
+    else { let p; do{ p=rand9(); }while(p===s[i-n]); s.push(p); lastWasTarget=false; } // 非匹配（必不等于目标）
+  }
+  return s;
+}
+
+/* ---------- 开始 ---------- */
+function startGame(){
+  n = settings.n; total = settings.trials;
+  seq = genSequence(n, total);
+  idx=0; correctCount=0; answered=0; rtSum=0; waiting=false;
+  $('#nBadge').textContent = 'N = '+n;
+  $('#feedback').textContent=''; $('#feedback').className='feedback';
+  cells.forEach(c=>c.className='cell');
+  enableButtons(false);
+  clearTimers();
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  show('practice');
+  runTrial();
+}
+
+/* ---------- 出题循环 ---------- */
+function runTrial(){
+  if(idx>=total){ finish(); return; }
+  const pos=seq[idx];
+  const isWarm = idx<n;
+  $('#prompt').textContent = '';
+    if(isWarm){
+    if(settings.showText) $('#prompt').textContent='记住这个位置';
+  }
+  setCell(pos,'on');
+  timers.push(setTimeout(()=>{
+    clearCell(pos);
+    if(isWarm){
+      timers.push(setTimeout(()=>{ idx++; runTrial(); }, ISI));
+    } else {
+      timers.push(setTimeout(()=>{ showQuestion(); }, ISI));
+    }
+  }, STIM));
+  updateProgress(isWarm);
+}
+
+function showQuestion(){
+  if(settings.showText) $('#prompt').textContent = `这个位置和前面第 ${n} 个一样吗？`;
+  waiting=true; trialStart=performance.now();
+  enableButtons(true);
+  updateProgress(false);
+}
+
+function updateProgress(isWarm){
+  if(isWarm){ $('#prog').textContent = `记住第 ${idx+1} / ${n} 个位置`; }
+  else { $('#prog').textContent = `第 ${idx-n+1} / ${total-n} 题`; }
+}
+
+/* ---------- 作答 ---------- */
+function respond(userSaysMatch){
+  if(!waiting) return;
+  waiting=false; enableButtons(false);
+  const correct = (seq[idx] === seq[idx-n]);
+  const ok = (userSaysMatch === correct);
+  answered++; if(ok) correctCount++;
+  rtSum += (performance.now()-trialStart);
+
+  setCell(seq[idx], ok?'correct':'wrong');
+  const fb=$('#feedback');
+  fb.textContent = ok ? '答对啦！' : '再想想～';
+  fb.className = 'feedback '+(ok?'ok':'no');
+  beep(ok?880:196);
+
+  timers.push(setTimeout(()=>{
+    fb.textContent=''; fb.className='feedback';
+    clearCell(seq[idx]);
+    idx++; runTrial();
+  }, FB));
+}
+
+function enableButtons(b){
+  $('#sameBtn').disabled=!b;
+  $('#diffBtn').disabled=!b;
+}
+
+/* ---------- 结束 ---------- */
+function finish(){
+  clearTimers();
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  const acc = answered ? Math.round(correctCount/answered*100) : 0;
+  const stars = acc>=90?3 : acc>=70?2 : 1;
+  let best = parseInt(localStorage.getItem('nback_best')||'0',10);
+  if(acc>best){ best=acc; localStorage.setItem('nback_best', String(acc)); }
+
+  $('#doneScore').textContent = `正确率 ${acc}% · 答对 ${correctCount}/${answered}`;
+  $('#doneStars').textContent = '★★★'.slice(0,stars).padEnd(3,'☆');
+  $('#doneSub').textContent = stars===3 ? '太棒了！你的记忆力超强！'
+                          : stars===2 ? '做得很好，继续加油！'
+                          : '慢慢来，多练几次就会更棒！';
+  $('#doneBest').textContent = best>0 ? `最佳正确率：${best}%` : '';
+  show('done');
+}
+
+/* ---------- 教学：2-back，小图时间线全呈现（无语音） ---------- */
+let tSeq=[], tIdx=0, tCorrect=0, tAnswered=0, tWaiting=false, tStart=0, tTrail=[];
+
+function teachStart(){
+  tSeq = genSequence(2, 12);          // 固定 2-back，共 12 步（约 10 道比较题）
+  tIdx=0; tCorrect=0; tAnswered=0; tTrail=[]; tWaiting=false;
+  $('#thistory').innerHTML='';
+  $('#tfeedback').textContent=''; $('#tfeedback').className='feedback';
+  $('#tsame').disabled=true; $('#tdiff').disabled=true;
+  clearTimers();
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  show('teach');
+  teachTrial();
+}
+
+function renderHistory(){
+  const cur = tTrail.length-1;
+  const box=$('#thistory'); box.innerHTML='';
+  tTrail.forEach((pos,step)=>{
+    const m=document.createElement('div');
+    let cls='mini';
+    if(step===cur) cls+=' cur';
+    if(cur-2>=0 && step===cur-2) cls+=' tgt';
+    m.className=cls;
+    for(let i=0;i<9;i++){
+      const c=document.createElement('div');
+      c.className='mc'+(i===pos?' on':'');
+      m.appendChild(c);
+    }
+    const lab=document.createElement('div');
+    lab.className='minilab';
+    lab.textContent = (step+1);
+    m.appendChild(lab);
+    box.appendChild(m);
+  });
+}
+
+function teachTrial(){
+  if(tIdx>=tSeq.length){ teachFinish(); return; }
+  const pos=tSeq[tIdx];
+  const isWarm = tIdx<2;
+  tTrail.push(pos);
+  const cur = tTrail.length-1;
+  renderHistory();
+  $('#tprompt').textContent='';
+  if(isWarm){
+    if(settings.showText) $('#tprompt').textContent = `记住这个位置（第 ${cur+1} 个）`;
+  }
+  timers.push(setTimeout(()=>{
+    if(isWarm){
+      timers.push(setTimeout(()=>{ tIdx++; teachTrial(); }, ISI));
+    } else {
+      timers.push(setTimeout(()=>{ teachQuestion(); }, ISI));
+    }
+  }, STIM));
+  $('#tprog').textContent = isWarm ? `记住第 ${cur+1} / 2 个位置`
+                                  : `第 ${cur-1} / ${tSeq.length-2} 题`;
+}
+
+function teachQuestion(){
+  if(settings.showText) $('#tprompt').textContent = '现在（黄框）和前面第 2 个（蓝圈）一样吗？';
+  tWaiting=true; tStart=performance.now();
+  $('#tsame').disabled=false; $('#tdiff').disabled=false;
+}
+
+function teachRespond(userSaysMatch){
+  if(!tWaiting) return;
+  tWaiting=false; $('#tsame').disabled=true; $('#tdiff').disabled=true;
+  const correct = (tSeq[tIdx] === tSeq[tIdx-2]);
+  const ok = (userSaysMatch === correct);
+  tAnswered++; if(ok) tCorrect++;
+  const fb=$('#tfeedback');
+  fb.textContent = ok ? '答对啦！' : '再想想，看蓝圈的位置～';
+  fb.className = 'feedback '+(ok?'ok':'no');
+  beep(ok?880:196);
+  timers.push(setTimeout(()=>{
+    fb.textContent=''; fb.className='feedback';
+    tIdx++; teachTrial();
+  }, FB));
+}
+
+function teachFinish(){
+  clearTimers();
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  const acc = tAnswered ? Math.round(tCorrect/tAnswered*100) : 0;
+  $('#doneScore').textContent = `学会啦！正确率 ${acc}%`;
+  $('#doneStars').textContent = acc>=70 ? '★★★' : '★★☆';
+  $('#doneSub').textContent = '你已经理解规则了，去正式玩吧！';
+  $('#doneBest').textContent = '';
+  show('done');
+}
+
+/* ---------- 事件 ---------- */
+$('#startBtn').addEventListener('click', startGame);
+$('#againBtn').addEventListener('click', startGame);
+$('#homeBtn').addEventListener('click', ()=>show('home'));
+$('#exitBtn').addEventListener('click', ()=>{
+  clearTimers(); waiting=false; enableButtons(false);
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  show('home');
+});
+$('#sameBtn').addEventListener('click', ()=>respond(true));
+$('#diffBtn').addEventListener('click', ()=>respond(false));
+
+$('#teachBtn').addEventListener('click', teachStart);
+$('#teachExit').addEventListener('click', ()=>{
+  clearTimers(); tWaiting=false; $('#tsame').disabled=true; $('#tdiff').disabled=true;
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  show('home');
+});
+$('#tsame').addEventListener('click', ()=>teachRespond(true));
+$('#tdiff').addEventListener('click', ()=>teachRespond(false));
+
+document.addEventListener('keydown', e=>{
+  const onTeach = $('#teach').classList.contains('active');
+  const w = onTeach ? tWaiting : waiting;
+  if(!w) return;
+  const k=e.key.toLowerCase();
+  if(k==='f'||k==='arrowright'||k===' '){ e.preventDefault(); onTeach?teachRespond(true):respond(true); }
+  else if(k==='j'||k==='arrowleft'){ e.preventDefault(); onTeach?teachRespond(false):respond(false); }
+});
+
+// 设置面板
+$('#gearBtn').addEventListener('click', ()=>$('#settingsPanel').classList.add('show'));
+$('#closeSet').addEventListener('click', ()=>{
+  $('#settingsPanel').classList.remove('show');
+});
+function bindSwitch(id,key){
+  const el=$('#'+id);
+  el.addEventListener('click',()=>{ settings[key]=!settings[key]; el.classList.toggle('on',settings[key]); });
+}
+bindSwitch('setText','showText');
+bindSwitch('setSound','sound');
+$('#setVol').addEventListener('input', e=>settings.vol=parseFloat(e.target.value));
+function bindSeg(id,key){
+  const seg=$('#'+id);
+  seg.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      seg.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      settings[key]=parseFloat(b.dataset.v);
+    });
+  });
+}
+bindSeg('setN','n');
+bindSeg('setTrials','trials');
+bindSeg('setMatch','matchRatio');
+
+// 预载语音列表
+if('speechSynthesis' in window){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+}
+</script>
+</body>
+</html>
