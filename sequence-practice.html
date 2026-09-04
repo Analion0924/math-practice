@@ -111,6 +111,7 @@
     align-items:center; justify-content:center; padding:4px;
   }
   .choice img{width:100%; height:78%; object-fit:contain;}
+  .choice.no-text img{height:94%;}
   .choice .lab{font-size:13px; font-weight:700; margin-top:2px; color:var(--ink);}
   .choice:active{transform:scale(.95);}
   .choice.used{opacity:.35; pointer-events:none;}
@@ -384,8 +385,9 @@ function renderGrid(){
   cur.cands.forEach(id=>{
     const a = BYID[id];
     const d = document.createElement('div');
-    d.className='choice'; d.dataset.id=id;
-    d.innerHTML = `<img src="activity-images/${a.f}" alt="${a.t}"><div class="lab">${a.t}</div>`;
+    d.className='choice'+(settings.showText?'':' no-text'); d.dataset.id=id;
+    if(filled.A===id||filled.B===id) d.classList.add('used');
+    d.innerHTML = `<img src="activity-images/${a.f}" alt="${a.t}">`+(settings.showText?`<div class="lab">${a.t}</div>`:'');
     d.addEventListener('click',()=>pick(id,d));
     g.appendChild(d);
   });
@@ -500,17 +502,12 @@ $('#closeSet').addEventListener('click', ()=>{
 });
 $('#setVol').addEventListener('input', e=>settings.vol=parseFloat(e.target.value));
 $('#setRate').addEventListener('input', e=>settings.rate=parseFloat(e.target.value));
-function bindSwitch(id, key){
+function bindSwitch(id, key, onChange){
   const el = $('#'+id);
-  el.addEventListener('click', ()=>{ settings[key]=!settings[key]; el.classList.toggle('on', settings[key]); });
+  el.addEventListener('click', ()=>{ settings[key]=!settings[key]; el.classList.toggle('on', settings[key]); if(onChange) onChange(); });
 }
-bindSwitch('setText','showText');
+bindSwitch('setText','showText', ()=>{ if(cur && $('#practice').classList.contains('active')) renderGrid(); });
 bindSwitch('setAuto','auto');
-// auto 逻辑：做对且显示跟读时，若auto则延迟自动下一题（这里保留手动，auto仅在跟读后自动跳）
-$('#setAuto').addEventListener('click', ()=>{
-  if(settings.auto){ // 在跟读出现后自动跳
-  }
-});
 $('#setPool').querySelectorAll('button').forEach(b=>{
   b.addEventListener('click', ()=>{
     $('#setPool').querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
