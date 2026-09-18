@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>看图说话 · 复句表达</title>
+<style>
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  :root{
+    --primary:#2BB3A3; --primary-d:#1E8B7E;
+    --bg:#F3FBFA; --card:#FFFFFF; --ink:#2B3A39;
+    --muted:#8AA19D; --line:#E2EFEC; --ok:#36C08F;
+    --causal:#FF6B4A; --seq:#FF8A3D; --but:#7C6BD9;
+  }
+  html,body{margin:0; height:100%;}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #app{width:100%; max-width:760px; height:100%; max-height:1000px; position:relative; background:var(--bg);}
+  .screen{position:absolute; inset:0; display:none; flex-direction:column; padding:18px; overflow-y:auto;}
+  .screen.active{display:flex;}
+
+  /* ---------- 首页 ---------- */
+  #home{align-items:center; justify-content:center; text-align:center; gap:18px;}
+  #home h1{font-size:30px; margin:0; color:var(--primary-d); letter-spacing:2px;}
+  #home .sub{font-size:16px; color:var(--muted); line-height:1.7; max-width:420px;}
+  #home .tags{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:4px;}
+  #home .tags span{font-size:13px; padding:5px 12px; border-radius:20px; color:#fff;}
+  .t-causal{background:var(--causal);} .t-seq{background:var(--seq);} .t-but{background:var(--but);}
+  .bigbtn{
+    margin-top:10px; background:var(--primary); color:#fff; border:none;
+    font-size:20px; padding:16px 46px; border-radius:40px; cursor:pointer;
+    box-shadow:0 6px 16px rgba(43,179,163,.35); font-weight:600;
+  }
+  .bigbtn:active{transform:translateY(1px);}
+
+  /* ---------- 练习页 ---------- */
+  .topbar{display:flex; align-items:center; justify-content:space-between; padding:2px 4px 12px;}
+  .prog{font-size:15px; color:var(--muted);}
+  .prog b{color:var(--primary-d); font-size:17px;}
+  .gear{width:40px; height:40px; border-radius:50%; background:var(--card); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.05);}
+
+  .pics{display:flex; align-items:center; justify-content:center; gap:10px; margin:6px 0 4px;}
+  .pic{background:var(--card); border-radius:20px; padding:12px; flex:1; aspect-ratio:1/1; position:relative;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.06);}
+  .pretag{position:absolute; top:-10px; left:-10px; background:var(--primary); color:#fff;
+    font-size:14px; font-weight:700; padding:4px 10px; border-radius:12px; box-shadow:0 2px 6px rgba(43,179,163,.4); display:none; z-index:5;}
+  .pic img{width:100%; height:100%; object-fit:contain; border-radius:12px;}
+  .conn{font-size:22px; font-weight:700; color:var(--primary); min-width:54px; text-align:center;
+    padding:8px 10px; border-radius:14px; background:#E6F7F4; flex:0 0 auto;}
+  .conn.hide{visibility:hidden;}
+
+  .typetag{text-align:center; font-size:13px; color:var(--muted); margin:2px 0 8px;}
+  .typetag .pill{padding:3px 10px; border-radius:12px; color:#fff; font-size:12px;}
+
+  .reveal{margin:6px auto 0; max-width:560px; text-align:center; min-height:8px;}
+  .reveal .line{font-size:22px; line-height:1.6; color:var(--ink); background:var(--card);
+    border:1px dashed var(--primary); border-radius:16px; padding:14px 18px; display:inline-block;}
+  .reveal .line .seg{color:var(--primary-d); font-weight:600;}
+
+  .controls{margin-top:auto; display:flex; flex-direction:column; gap:12px; padding-top:14px;}
+  .row{display:flex; gap:12px;}
+  .btn{flex:1; border:none; border-radius:16px; padding:15px 0; font-size:17px; cursor:pointer; font-weight:600;
+    background:var(--card); color:var(--primary-d); border:1px solid var(--line); box-shadow:0 2px 6px rgba(0,0,0,.04);}
+  .btn.primary{background:var(--primary); color:#fff; border:none; box-shadow:0 5px 14px rgba(43,179,163,.32);}
+  .btn:active{transform:translateY(1px);}
+  .btn .ic{font-size:20px; margin-right:6px;}
+
+  /* ---------- 设置面板 ---------- */
+  .mask{position:absolute; inset:0; background:rgba(0,0,0,.35); display:none; z-index:20;}
+  .mask.active{display:block;}
+  .panel{position:absolute; top:0; right:0; height:100%; width:300px; max-width:86%; background:var(--card);
+    z-index:30; transform:translateX(100%); transition:transform .25s; padding:22px 20px; overflow-y:auto;
+    box-shadow:-6px 0 20px rgba(0,0,0,.12);}
+  .panel.active{transform:translateX(0);}
+  .panel h3{margin:0 0 16px; font-size:18px; color:var(--ink);}
+  .field{margin-bottom:20px;}
+  .field label{display:block; font-size:14px; color:var(--muted); margin-bottom:8px;}
+  .field input[type=range]{width:100%; accent-color:var(--primary);}
+  .switch{display:flex; align-items:center; justify-content:space-between;}
+  .switch .lab{font-size:15px; color:var(--ink);}
+  .toggle{width:52px; height:30px; border-radius:16px; background:#D7E3E0; position:relative; cursor:pointer; transition:background .2s;}
+  .toggle.on{background:var(--primary);}
+  .toggle::after{content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%;
+    background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .toggle.on::after{left:25px;}
+  .closep{margin-top:6px; width:100%; border:none; background:var(--line); color:var(--ink); padding:12px; border-radius:12px; font-size:15px; cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 首页 -->
+  <div id="home" class="screen active">
+    <h1>看图说话</h1>
+    <div class="sub">看看两幅图，<br>想一想、说一说它们之间发生了什么。</div>
+    <div class="tags">
+      <span class="t-causal">因果 · 因为…所以…</span>
+      <span class="t-seq">顺承 · 先…然后…</span>
+      <span class="t-but">转折 · …但是…</span>
+    </div>
+    <button class="bigbtn" id="startBtn">开始练习</button>
+  </div>
+
+  <!-- 练习页 -->
+  <div id="practice" class="screen">
+    <div class="topbar">
+      <div class="prog">第 <b id="idx">1</b> / <span id="total">73</span> 张</div>
+      <div class="gear" id="gearBtn">⚙</div>
+    </div>
+
+    <div class="pics">
+      <div class="pic"><span class="pretag" id="preTag"></span><img id="picA" src="" alt=""></div>
+      <div class="conn" id="connWord">所以</div>
+      <div class="pic"><img id="picB" src="" alt=""></div>
+    </div>
+    <div class="typetag" id="typeTag"></div>
+
+    <div class="reveal" id="reveal"></div>
+
+    <div class="controls">
+      <div class="row">
+        <button class="btn" id="listenBtn"><span class="ic">🔊</span>听一听</button>
+        <button class="btn" id="showBtn"><span class="ic">👀</span>显示句子</button>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="nextBtn"><span class="ic">➡</span>下一张</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置 -->
+  <div class="mask" id="mask"></div>
+  <div class="panel" id="panel">
+    <h3>设置</h3>
+    <div class="field">
+      <label>音量</label>
+      <input type="range" id="setVol" min="0" max="1" step="0.05" value="0.9">
+    </div>
+    <div class="field">
+      <label>语速</label>
+      <input type="range" id="setRate" min="0.5" max="1.3" step="0.05" value="0.9">
+    </div>
+    <div class="field">
+      <div class="switch">
+        <span class="lab">显示连接词</span>
+        <div class="toggle on" id="setConn"></div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="switch">
+        <span class="lab">显示句型标签</span>
+        <div class="toggle" id="setType"></div>
+      </div>
+    </div>
+    <button class="closep" id="closePanel">关闭</button>
+  </div>
+
+</div>
+
+<script>
+/* ============ 数据 ============ */
+
+// 因果复句：c = 原因，r = 结果（cXX 与 rXX 按序号配对）
+const CAUSES = [
+  {f:'c01.webp',t:'下雨了'},{f:'c02.webp',t:'太阳大'},{f:'c03.webp',t:'天黑'},
+  {f:'c04.webp',t:'冷'},{f:'c05.webp',t:'热'},{f:'c06.webp',t:'闹钟响'},
+  {f:'c07.webp',t:'要出门'},{f:'c08.webp',t:'要睡觉'},{f:'c09.webp',t:'饿'},
+  {f:'c10.webp',t:'渴'},{f:'c11.webp',t:'困'},{f:'c12.webp',t:'生病'},
+  {f:'c13.webp',t:'手脏'},{f:'c14.webp',t:'牙痛'},{f:'c15.webp',t:'手破'},
+  {f:'c16.webp',t:'打喷嚏'},{f:'c17.webp',t:'衣服脏'},{f:'c18.webp',t:'地板脏'},
+  {f:'c19.webp',t:'桌子脏'},{f:'c20.webp',t:'铅笔断'},{f:'c21.webp',t:'鞋带松'},
+  {f:'c22.webp',t:'手机没电'},{f:'c23.webp',t:'电视坏'},{f:'c24.webp',t:'过生日'},
+];
+const RESULTS = [
+  {f:'r01.webp',t:'打伞'},{f:'r02.webp',t:'戴帽子'},{f:'r03.webp',t:'开灯'},
+  {f:'r04.webp',t:'穿外套'},{f:'r05.webp',t:'开风扇'},{f:'r06.webp',t:'起床'},
+  {f:'r07.webp',t:'穿鞋'},{f:'r08.webp',t:'关灯'},{f:'r09.webp',t:'吃饭'},
+  {f:'r10.webp',t:'喝水'},{f:'r11.webp',t:'睡觉'},{f:'r12.webp',t:'吃药'},
+  {f:'r13.webp',t:'洗手'},{f:'r14.webp',t:'看牙医'},{f:'r15.webp',t:'贴创可贴'},
+  {f:'r16.webp',t:'拿纸巾'},{f:'r17.webp',t:'洗衣服'},{f:'r18.webp',t:'扫地'},
+  {f:'r19.webp',t:'擦桌子'},{f:'r20.webp',t:'削铅笔'},{f:'r21.webp',t:'系鞋带'},
+  {f:'r22.webp',t:'充电'},{f:'r23.webp',t:'叫人修'},{f:'r24.webp',t:'吃蛋糕'},
+];
+const causalItems = CAUSES.map((c,i)=>{
+  const r = RESULTS[i];
+  return {type:'因果', pre:'因为', mid:'所以', color:'var(--causal)',
+    a:'causal-images/'+c.f, b:'causal-images/'+r.f,
+    at:c.t, bt:r.t, sentence:'因为'+c.t+'，所以'+r.t};
+});
+
+// 顺承复句： [先, 然后] 有序配对
+const ACT = [
+  {id:'get_up',f:'01_get_up.webp',t:'起床'},{id:'get_dressed',f:'02_get_dressed.webp',t:'穿衣服'},
+  {id:'brush_teeth',f:'03_brush_teeth.webp',t:'刷牙'},{id:'wash_face',f:'04_wash_face.webp',t:'洗脸'},
+  {id:'put_on_shoes',f:'05_put_on_shoes.webp',t:'穿鞋'},{id:'wash_hands',f:'06_wash_hands.webp',t:'洗手'},
+  {id:'eat_meal',f:'07_eat_meal.webp',t:'吃饭'},{id:'drink_water',f:'08_drink_water.webp',t:'喝水'},
+  {id:'drink_milk',f:'09_drink_milk.webp',t:'喝奶'},{id:'eat_fruit',f:'10_eat_fruit.webp',t:'吃水果'},
+  {id:'serve_rice',f:'11_serve_rice.webp',t:'盛饭'},{id:'clear_table',f:'12_clear_table.webp',t:'收拾碗筷'},
+  {id:'read_book',f:'13_read_book.webp',t:'看书'},{id:'draw',f:'14_draw.webp',t:'画画'},
+  {id:'write',f:'15_write.webp',t:'写字'},{id:'build_blocks',f:'16_build_blocks.webp',t:'搭积木'},
+  {id:'play_toy',f:'17_play_toy.webp',t:'玩玩具'},{id:'jump_rope',f:'18_jump_rope.webp',t:'跳绳'},
+  {id:'tidy_toys',f:'19_tidy_toys.webp',t:'收玩具'},{id:'wipe_table',f:'20_wipe_table.webp',t:'擦桌子'},
+  {id:'sweep_floor',f:'21_sweep_floor.webp',t:'扫地'},{id:'water_plant',f:'22_water_plant.webp',t:'浇花'},
+  {id:'take_bath',f:'23_take_bath.webp',t:'洗澡'},{id:'turn_off_light',f:'24_turn_off_light.webp',t:'关灯'},
+  {id:'sleep',f:'25_sleep.webp',t:'睡觉'},
+];
+const actById = {}; ACT.forEach(a=>actById[a.id]=a);
+const SEQ = [
+  ['get_up','get_dressed'],['get_dressed','put_on_shoes'],['wash_face','brush_teeth'],
+  ['wash_hands','eat_meal'],['serve_rice','eat_meal'],['eat_meal','clear_table'],
+  ['drink_milk','eat_meal'],['wash_hands','eat_fruit'],['brush_teeth','sleep'],
+  ['read_book','sleep'],['take_bath','sleep'],['draw','tidy_toys'],
+  ['build_blocks','tidy_toys'],['play_toy','tidy_toys'],['put_on_shoes','jump_rope'],
+  ['jump_rope','drink_water'],['wipe_table','sweep_floor'],['eat_fruit','wash_hands'],
+  ['draw','write'],['turn_off_light','sleep'],
+];
+const seqItems = SEQ.map(([fid,sid])=>{
+  const f=actById[fid], s=actById[sid];
+  return {type:'顺承', pre:'先', mid:'然后', color:'var(--seq)',
+    a:'activity-images/'+f.f, b:'activity-images/'+s.f,
+    at:f.t, bt:s.t, sentence:'先'+f.t+'，然后'+s.t};
+});
+
+// 转折复句：a = 前半句，b = 后来
+const SENTENCES = [
+  "弟弟想玩汽车，但是汽车没电了。","妹妹想喝牛奶，但是牛奶喝完了。",
+  "妹妹想出去玩，但是外面下雨了。","妈妈想做饭，但是锅坏了。",
+  "爸爸想开车上班，但是车子坏了。","我想吃冰淇淋，但是冰箱里没有冰淇淋。",
+  "妹妹想看动画片，但是要睡觉了。","弟弟想搭积木，但是积木少了一块。",
+  "妹妹想穿新裙子，但是裙子还没干。","妈妈想看书，但是书不见了。",
+  "爸爸想跑步，但是腿有点疼。","我想画画，但是找不到画笔了。",
+  "妹妹想荡秋千，但是秋千有人了。","妈妈想喝茶，但是水还没烧开。",
+  "爸爸想睡觉，但是有人打电话。","我想吃苹果，但是苹果还没洗。",
+  "妹妹想穿鞋，但是不会系鞋带。","弟弟想骑车，但是车胎没气了。",
+  "我想堆雪人，但是雪化了。","爸爸想看电影，但是电影票卖完了。",
+  "妹妹想去游泳，但是水太冷了。","妈妈想去跑步，但是外面太热了。",
+  "弟弟想玩手机，但是手机没电了。","妹妹想穿裙子，但是裙子脏了。",
+  "妹妹想找老师，但是老师不在。","妹妹想吹泡泡，但是泡泡水用完了。",
+  "弟弟想踢足球，但是足球没气了。","弟弟想拿饼干，但是够不到。",
+  "妹妹想喝奶茶，但是妈妈不同意。",
+];
+const butItems = SENTENCES.map((s,i)=>{
+  const n = String(i+1).padStart(2,'0');
+  const parts = s.replace(/。$/,'').split('，但是');
+  return {type:'转折', pre:'', mid:'但是', color:'var(--but)',
+    a:'but-images/a'+n+'.webp', b:'but-images/b'+n+'.webp',
+    at:parts[0], bt:parts[1], sentence:s};
+});
+
+// 合并 + 随机打乱
+const ITEMS = [].concat(causalItems, seqItems, butItems);
+function shuffle(a){a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let order = shuffle(ITEMS.map((_,i)=>i));
+let qi = 0;
+
+/* ============ 状态 ============ */
+const settings = {vol:0.9, rate:0.9, showConn:true, showType:false};
+let revealed = false;
+
+/* ============ 工具 ============ */
+const $ = s=>document.querySelector(s);
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN'; u.rate=settings.rate; u.volume=settings.vol;
+    const vs=window.speechSynthesis.getVoices();
+    const zh=vs.find(v=>/zh|Chinese|中文/i.test(v.lang+v.name));
+    if(zh) u.voice=zh;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ============ 渲染 ============ */
+function render(){
+  const it = ITEMS[order[qi]];
+  $('#picA').src = it.a;
+  $('#picB').src = it.b;
+  $('#idx').textContent = qi+1;
+  $('#total').textContent = ITEMS.length;
+  $('#connWord').textContent = it.mid;
+  $('#connWord').classList.toggle('hide', !settings.showConn);
+  const pt = $('#preTag');
+  pt.textContent = it.pre;
+  pt.style.display = (settings.showConn && it.pre) ? 'block' : 'none';
+  // 句型标签
+  const tt = $('#typeTag');
+  if(settings.showType){
+    tt.innerHTML = '<span class="pill" style="background:'+it.color+'">'+it.type+'复句</span>';
+  } else { tt.innerHTML = ''; }
+  // 重置显示句
+  revealed = false;
+  $('#reveal').innerHTML = '';
+}
+
+function showSentence(){
+  const it = ITEMS[order[qi]];
+  $('#reveal').innerHTML = '<div class="line"><span class="seg">'+it.pre+it.at+'</span>，'+it.mid+'<span class="seg">'+it.bt+'</span>。</div>';
+  revealed = true;
+}
+
+/* ============ 交互 ============ */
+$('#startBtn').addEventListener('click', ()=>{
+  order = shuffle(ITEMS.map((_,i)=>i)); qi = 0;
+  $('#home').classList.remove('active');
+  $('#practice').classList.add('active');
+  render();
+});
+$('#listenBtn').addEventListener('click', ()=> speak(ITEMS[order[qi]].sentence));
+$('#showBtn').addEventListener('click', showSentence);
+$('#nextBtn').addEventListener('click', ()=>{
+  qi = (qi+1) % ITEMS.length;
+  if(qi===0) order = shuffle(ITEMS.map((_,i)=>i));
+  render();
+});
+
+// 设置面板
+function openPanel(){ $('#mask').classList.add('active'); $('#panel').classList.add('active'); }
+function closePanel(){ $('#mask').classList.remove('active'); $('#panel').classList.remove('active'); }
+$('#gearBtn').addEventListener('click', openPanel);
+$('#closePanel').addEventListener('click', closePanel);
+$('#mask').addEventListener('click', closePanel);
+
+$('#setVol').addEventListener('input', e=> settings.vol = parseFloat(e.target.value));
+$('#setRate').addEventListener('input', e=> settings.rate = parseFloat(e.target.value));
+$('#setConn').addEventListener('click', function(){
+  settings.showConn = !settings.showConn;
+  this.classList.toggle('on', settings.showConn);
+  $('#connWord').classList.toggle('hide', !settings.showConn);
+  const it = ITEMS[order[qi]];
+  $('#preTag').style.display = (settings.showConn && it.pre) ? 'block' : 'none';
+});
+$('#setType').addEventListener('click', function(){
+  settings.showType = !settings.showType;
+  this.classList.toggle('on', settings.showType);
+  const tt = $('#typeTag');
+  if(settings.showType){ const it=ITEMS[order[qi]]; tt.innerHTML='<span class="pill" style="background:'+it.color+'">'+it.type+'复句</span>'; }
+  else tt.innerHTML='';
+});
+
+// 预载语音（部分浏览器首次需用户手势）
+if('speechSynthesis' in window){ window.speechSynthesis.getVoices(); }
+</script>
+</body>
+</html>
