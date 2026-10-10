@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>语言与认知练习 · 首页</title>
+<style>
+* { box-sizing:border-box; }
+body { margin:0; font-family:"PingFang SC","Microsoft YaHei",sans-serif; background:linear-gradient(160deg,#eaf4ff,#fdeef6); color:#2c3e50; min-height:100vh; }
+header { padding:30px 20px 10px; text-align:center; }
+header h1 { margin:0; font-size:26px; color:#3a5a8a; }
+header p { margin:8px 0 0; color:#7a8aa0; font-size:14px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; padding:24px; max-width:920px; margin:0 auto; }
+.card { display:block; text-decoration:none; background:#fff; border-radius:20px; padding:20px; box-shadow:0 6px 18px rgba(60,90,140,.12); transition:transform .1s, box-shadow .1s; border-left:6px solid var(--c,#2bb3a3); }
+.card:hover { transform:translateY(-3px); box-shadow:0 10px 26px rgba(60,90,140,.2); }
+.card .emoji { font-size:30px; }
+.card .t { font-size:18px; font-weight:800; margin:8px 0 4px; color:#2c3e50; }
+.card .d { font-size:13px; color:#7a8aa0; line-height:1.5; }
+footer { text-align:center; color:#9aa7bb; font-size:12px; padding:10px 0 30px; }
+</style></head>
+<body>
+<header>
+  <h1>语言与认知练习</h1>
+  <p>点击卡片进入对应的练习页面</p>
+</header>
+<div class="grid">
+  <a class="card" style="--c:#2bb3a3" href="measure-practice.html"><div class="emoji">🔢</div><div class="t">量词 · 看图听词</div><div class="d">76 张彩色卡通图，点图或喇叭听中文朗读，可随机抽 10/20 道。</div></a>
+  <a class="card" style="--c:#e08a3c" href="express-practice.html"><div class="emoji">🗣️</div><div class="t">看图说话 · 复句表达</div><div class="d">因果 / 顺承 / 转折三类复句混合，两图并排 + 连接词，孩子自主表达。</div></a>
+  <a class="card" style="--c:#7a6cf0" href="but-practice.html"><div class="emoji">🔄</div><div class="t">转折复句 · 但是</div><div class="d">听整句 → 选前后半句图 → 跟读。</div></a>
+  <a class="card" style="--c:#ef6f6f" href="causal-practice.html"><div class="emoji">💡</div><div class="t">因果复句 · 因为…所以</div><div class="d">听整句 → 选前后半句图 → 跟读。</div></a>
+  <a class="card" style="--c:#f0b429" href="sequence-practice.html"><div class="emoji">➡️</div><div class="t">顺承复句 · 先…然后</div><div class="d">听整句 → 选前后半句图 → 跟读。</div></a>
+  <a class="card" style="--c:#3aa0e0" href="ye-practice.html"><div class="emoji">🔠</div><div class="t">副词「也」练习</div><div class="d">亲属称谓 + 「也」字句式听说练习。</div></a>
+  <a class="card" style="--c:#56b870" href="nback-position.html"><div class="emoji">🧠</div><div class="t">n-back 听觉/位置</div><div class="d">工作记忆训练游戏。</div></a>
+  <a class="card" style="--c:#9aa7bb" href="daynight.html"><div class="emoji">🌗</div><div class="t">昼夜 Stroop 游戏</div><div class="d">认知抑制控制练习。</div></a>
+</div>
+<footer>语言与认知练习合集 · 单页离线可用</footer>
+</body></html>
