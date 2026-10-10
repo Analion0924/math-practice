@@ -25,6 +25,7 @@ h2 { font-size:22px; color:#3a5a8a; margin:18px 0 6px; }
 .row { display:flex; gap:14px; justify-content:center; margin-top:22px; }
 .btn { border:none; cursor:pointer; border-radius:50px; font-size:17px; font-weight:700; padding:14px 22px; box-shadow:0 4px 12px rgba(0,0,0,.12); transition:transform .08s; }
 .btn:active { transform:scale(.95); }
+.btn:disabled { opacity:.4; cursor:default; transform:none; box-shadow:none; }
 #speak { background:#2bb3a3; color:#fff; display:flex; align-items:center; gap:8px; }
 #next { background:#ffd166; color:#5a4a00; }
 #mask { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; }
@@ -59,6 +60,7 @@ h2 { font-size:22px; color:#3a5a8a; margin:18px 0 6px; }
       <div id="phrase"></div>
     </div>
     <div class="row">
+      <button class="btn" id="prev">⬅ 上一张</button>
       <button class="btn" id="speak">🔊 听一听</button>
       <button class="btn" id="next">下一张 ➡</button>
     </div>
@@ -90,13 +92,15 @@ function cur(){ return round[qi]; }
 function showPlay(){ $('#start').style.display='none'; $('#done').style.display='none'; $('#play').style.display='flex'; }
 function showStart(){ $('#play').style.display='none'; $('#done').style.display='none'; $('#start').style.display='flex'; }
 function showDone(){ $('#play').style.display='none'; $('#start').style.display='none'; $('#done').style.display='flex'; $('#doneSub').textContent='你完成了 '+round.length+' 道量词练习，继续加油！'; }
-function render(){ const it=cur(); $('#pic').src='data:image/webp;base64,'+it.img; $('#phrase').textContent=settings.showText?it.phrase:''; $('#prog').textContent='第 '+(qi+1)+' / '+round.length+' 张'; }
+function render(){ const it=cur(); $('#pic').src='data:image/webp;base64,'+it.img; $('#phrase').textContent=settings.showText?it.phrase:''; $('#prog').textContent='第 '+(qi+1)+' / '+round.length+' 张'; $('#prev').disabled = (qi===0); }
 function speak(){ try{ speechSynthesis.cancel(); }catch(e){} const u=new SpeechSynthesisUtterance(cur().phrase); u.lang='zh-CN'; u.rate=settings.rate; u.volume=settings.volume; speechSynthesis.speak(u); }
 function next(){ qi++; if(qi>=round.length){ showDone(); } else { render(); } }
+function prev(){ if(qi>0){ qi--; render(); } }
 function startRound(n){ round = shuffle(DATA.slice()).slice(0,n); qi=0; showPlay(); render(); }
 $('#speak').addEventListener('click', speak);
 $('#pic').addEventListener('click', speak);
 $('#next').addEventListener('click', next);
+$('#prev').addEventListener('click', prev);
 document.querySelectorAll('.qbtn[data-n]').forEach(b=> b.addEventListener('click', ()=> startRound(+b.dataset.n)));
 $('#again').addEventListener('click', ()=> startRound(round.length));
 $('#toHome').addEventListener('click', ()=> location.href='index.html');
